@@ -20,6 +20,11 @@ MainWindow::MainWindow(QWidget *parent) :
     QByteArray message;
     QString errorString;
 
+    (void)Crc8Table;
+    (void)sensorId;
+    (void)message;
+    (void)errorString;
+
     // set up serial port (decl. in header file)
     port = new QSerialPort();
 }
