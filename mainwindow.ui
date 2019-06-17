@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>743</width>
-    <height>489</height>
+    <width>1209</width>
+    <height>679</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -47,11 +47,11 @@
          <layout class="QGridLayout" name="gridLayout_4">
           <item row="0" column="0">
            <layout class="QGridLayout" name="gridLayout_3">
-            <item row="0" column="0" colspan="2">
+            <item row="0" column="0">
              <widget class="QLabel" name="label">
               <property name="minimumSize">
                <size>
-                <width>85</width>
+                <width>0</width>
                 <height>20</height>
                </size>
               </property>
@@ -60,27 +60,41 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="2">
-             <widget class="QComboBox" name="comPortSelect"/>
-            </item>
-            <item row="0" column="3">
-             <widget class="QPushButton" name="refreshComPorts">
+            <item row="3" column="1" colspan="2">
+             <widget class="QLabel" name="sensorId">
               <property name="text">
-               <string>Refresh</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600; color:#0055ff;&quot;&gt;0x1234&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="0">
+            <item row="3" column="0">
              <widget class="QLabel" name="label_2">
               <property name="text">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600;font-family='Consolas'&quot;&gt;SensorID&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="1" colspan="2">
-             <widget class="QLabel" name="sensorId">
+            <item row="2" column="0">
+             <widget class="QPushButton" name="refreshComPorts">
               <property name="text">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600; color:#0055ff;&quot;&gt;0x1234&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>Refresh</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1" colspan="2">
+             <widget class="QComboBox" name="comPortSelect"/>
+            </item>
+            <item row="0" column="3">
+             <widget class="QPushButton" name="connectToCom">
+              <property name="text">
+               <string>Open Port</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <widget class="QLabel" name="comStatus">
+              <property name="text">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:9pt; font-weight:600; color:#ff0000;&quot;&gt;DISCONNECTED &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
              </widget>
             </item>
@@ -324,8 +338,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>743</width>
-     <height>17</height>
+     <width>1209</width>
+     <height>21</height>
     </rect>
    </property>
   </widget>

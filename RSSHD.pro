@@ -25,11 +25,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        commands.cpp \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+        sensor_utils.cpp
 
 HEADERS += \
-        mainwindow.h
+        commands.h \
+        mainwindow.h \
+        sensor_utils.h
 
 FORMS += \
         mainwindow.ui
