@@ -326,7 +326,7 @@ QByteArray gen_config_write(uint8_t *Crc8Table,
     // MESSAGE BODY
 
     // msg id (1)
-    msg.append(zero);
+    msg.append(0x2A);
 
     // msg sub id (1)
     msg.append(zero);

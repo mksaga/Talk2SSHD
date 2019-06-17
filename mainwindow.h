@@ -25,6 +25,8 @@ class MainWindow : public QMainWindow
     sensor_config *lastReadConf;
     sensor_config *lastWrittenConf;
 
+    sensor_data_config *lastReadDataConf;
+
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -38,6 +40,8 @@ private slots:
     void on_connectToCom_clicked();
 
     void on_writeSensorConfig_clicked();
+
+    void on_loadDataConf_clicked();
 
 private:
     Ui::MainWindow *ui;

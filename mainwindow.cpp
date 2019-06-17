@@ -28,8 +28,10 @@ MainWindow::MainWindow(QWidget *parent) :
     sensorId = 0x0168;
     resp.resize(90);
     writeResp.resize(20);
+
     lastReadConf = new sensor_config;
     lastWrittenConf = new sensor_config;
+    lastReadDataConf = new sensor_data_config;
 
     // set up serial port (decl. in header file)
     port = new QSerialPort();
@@ -67,6 +69,8 @@ MainWindow::~MainWindow()
     // sensorConfig pointers
     delete lastReadConf;
     delete lastWrittenConf;
+    delete lastReadDataConf;
+
     delete serialThread;
 }
 
@@ -130,7 +134,7 @@ void MainWindow::on_connectToCom_clicked()
         // now that COM port connected, check if sensor is connected
         if (refreshSensorConfig()) {
             // update connection status text
-            QString q = "<html><head/><body><p align=\"center\"><span style=\"font-size:9pt; font-weight:600; color:#00ff00;\">CONNECTED </span></p></body></html>";
+            QString q = "<html><head/><body><p align=\"center\"><span style=\"font-size:9pt; font-weight:600; color:#0d9332;\">CONNECTED </span></p></body></html>";
             ui->comStatus->setText(q);
             // re-enable button, set it to Close
             ui->connectToCom->setEnabled(true);
@@ -143,11 +147,11 @@ void MainWindow::on_connectToCom_clicked()
             q = lastReadConf->orientation;
             ui->sensorOrientation->setText(q);
             if (lastReadConf->units == 0) {
-                ui->unitsMetric->setDown(true);
-                ui->unitsEnglish->setDown(false);
+                ui->unitsMetric->setChecked(true);
+                ui->unitsEnglish->setChecked(false);
             } else {
-                ui->unitsMetric->setDown(false);
-                ui->unitsEnglish->setDown(true);
+                ui->unitsMetric->setChecked(false);
+                ui->unitsEnglish->setChecked(true);
             }
         } else {
             ui->connectToCom->setEnabled(true);
@@ -164,6 +168,7 @@ void MainWindow::on_connectToCom_clicked()
     }
 }
 
+// DOESN'T WORK, FIX LATER
 void MainWindow::on_writeSensorConfig_clicked()
 {
     // orientation
@@ -184,6 +189,7 @@ void MainWindow::on_writeSensorConfig_clicked()
             orientationCh = o;
         }
     }
+    lastWrittenConf->orientation = orientationCh;
 
     // locn
     QString locn = ui->sensorLocnEntry->text();
@@ -217,5 +223,67 @@ void MainWindow::on_writeSensorConfig_clicked()
     memo = gen_config_write(Crc8Table, lastWrittenConf, sensorId);
 
     write_message_to_sensor(port, &memo, &writeResp, Crc8Table, &errCode, 0x2A, 1);
-//    refreshSensorConfig();
+    refreshSensorConfig();
+}
+
+
+void MainWindow::on_loadDataConf_clicked()
+{
+    memo = genReadMsg(Crc8Table, 0x03, 0, sensorId);
+    write_message_to_sensor(port, &memo, &resp, Crc8Table, &errCode);
+    parse_data_conf_read_response(&resp, lastReadDataConf, errString);
+    ui->dataInterval->setValue(lastReadDataConf->data_interval);
+    switch(lastReadDataConf->interval_mode) {
+        case 0:
+            ui->dataConfStorageDisabled->setChecked(true);
+            ui->dataConfCircularMode->setChecked(false);
+            ui->dataConfFillOnceMode->setChecked(false);
+            break;
+        case 1:
+            ui->dataConfStorageDisabled->setChecked(false);
+            ui->dataConfCircularMode->setChecked(true);
+            ui->dataConfFillOnceMode->setChecked(false);
+            break;
+        case 2:
+            ui->dataConfStorageDisabled->setChecked(false);
+            ui->dataConfCircularMode->setChecked(false);
+            ui->dataConfFillOnceMode->setChecked(true);
+            break;
+    }
+
+    // update EventData config
+    ui->dataTypeSelect->setCurrentIndex(1);
+    ui->dataPortSelect->setCurrentIndex(1 + lastReadDataConf->e_portnum);
+
+    switch(lastReadDataConf->e_format) {
+        case 0: ui->dataFormatSelect->setCurrentIndex(1); break;
+        case 1: ui->dataFormatSelect->setCurrentIndex(2); break;
+        case 2: ui->dataFormatSelect->setCurrentIndex(3); break;
+        case 6: ui->dataFormatSelect->setCurrentIndex(4); break;
+        case 7: ui->dataFormatSelect->setCurrentIndex(5); break;
+        case 8: ui->dataFormatSelect->setCurrentIndex(6); break;
+        case 9: ui->dataFormatSelect->setCurrentIndex(7); break;
+    }
+
+    if (lastReadDataConf->e_pushen == 1) {
+        ui->dataConfPushEnable->setChecked(true);
+    } else {
+        ui->dataConfPushEnable->setChecked(false);
+    }
+    QString q = QString("%1").arg(lastReadDataConf->e_destid);
+    ui->dataConfDestID->setText(q);
+    q = QString("%1").arg(lastReadDataConf->e_destsubid);
+    ui->dataConfDestSubID->setText(q);
+
+    double dec = ((lastReadDataConf->loop_sep) & 0x00ff) / 256.0;
+    double intg = ((lastReadDataConf->loop_sep) & 0xff00) >> 8;
+    intg += dec;
+    q = QString("%1").arg(intg);
+    ui->loopSep->setText(q);
+
+    dec = ((lastReadDataConf->loop_size) & 0x00ff) / 256.0;
+    intg = ((lastReadDataConf->loop_size) & 0xff00) >> 8;
+    intg += dec;
+    q = QString("%1").arg(intg);
+    ui->loopSize->setText(q);
 }

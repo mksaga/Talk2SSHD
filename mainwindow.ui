@@ -9,18 +9,25 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1209</width>
-    <height>679</height>
+    <width>1322</width>
+    <height>575</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Talk2SSHD</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <property name="autoFillBackground">
     <bool>true</bool>
    </property>
    <layout class="QGridLayout" name="gridLayout_2">
+    <item row="0" column="1">
+     <widget class="QGroupBox" name="dataConfigParams">
+      <property name="title">
+       <string>Data Collection</string>
+      </property>
+     </widget>
+    </item>
     <item row="0" column="0">
      <widget class="QGroupBox" name="allConfigSection">
       <property name="maximumSize">
@@ -32,8 +39,11 @@
       <property name="title">
        <string>Configuration</string>
       </property>
-      <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0">
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="sizeConstraint">
+        <enum>QLayout::SetMinimumSize</enum>
+       </property>
+       <item>
         <widget class="QGroupBox" name="groupBox">
          <property name="maximumSize">
           <size>
@@ -45,66 +55,86 @@
           <string>Connect to Sensor</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="1">
+           <widget class="QComboBox" name="comPortSelect"/>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLabel" name="comStatus">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:9pt; font-weight:600; color:#ff0000;&quot;&gt;DISCONNECTED &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="sensorId">
+            <property name="maximumSize">
+             <size>
+              <width>200</width>
+              <height>300</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600; color:#0055ff;&quot;&gt;0x1234&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+           </widget>
+          </item>
           <item row="0" column="0">
-           <layout class="QGridLayout" name="gridLayout_3">
-            <item row="0" column="0">
-             <widget class="QLabel" name="label">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>20</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>COM Ports Available</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1" colspan="2">
-             <widget class="QLabel" name="sensorId">
-              <property name="text">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600; color:#0055ff;&quot;&gt;0x1234&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="label_2">
-              <property name="text">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600;font-family='Consolas'&quot;&gt;SensorID&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QPushButton" name="refreshComPorts">
-              <property name="text">
-               <string>Refresh</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1" colspan="2">
-             <widget class="QComboBox" name="comPortSelect"/>
-            </item>
-            <item row="0" column="3">
-             <widget class="QPushButton" name="connectToCom">
-              <property name="text">
-               <string>Open Port</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="3">
-             <widget class="QLabel" name="comStatus">
-              <property name="text">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:9pt; font-weight:600; color:#ff0000;&quot;&gt;DISCONNECTED &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
+           <widget class="QLabel" name="label">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>COM Ports Available</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600;font-family='Consolas'&quot;&gt;SensorID&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QPushButton" name="connectToCom">
+            <property name="text">
+             <string>Open Port</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QPushButton" name="refreshComPorts">
+            <property name="text">
+             <string>Refresh</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
        </item>
-       <item row="1" column="0">
+       <item>
         <widget class="QGroupBox" name="sensorConfig">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="maximumSize">
           <size>
            <width>16777215</width>
@@ -114,234 +144,436 @@
          <property name="title">
           <string>General Configuration</string>
          </property>
-         <widget class="QSplitter" name="splitter">
-          <property name="geometry">
-           <rect>
-            <x>10</x>
-            <y>20</y>
-            <width>181</width>
-            <height>20</height>
-           </rect>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <widget class="QLabel" name="label_3">
-           <property name="text">
-            <string>Orientation (N,E,S,W)</string>
-           </property>
-          </widget>
-          <widget class="QLineEdit" name="sensorOrientation">
-           <property name="maxLength">
-            <number>1</number>
-           </property>
-          </widget>
-         </widget>
-         <widget class="QPushButton" name="writeSensorConfig">
-          <property name="geometry">
-           <rect>
-            <x>224</x>
-            <y>110</y>
-            <width>141</width>
-            <height>23</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Write Sensor Configuration</string>
-          </property>
-         </widget>
-         <widget class="QWidget" name="layoutWidget">
-          <property name="geometry">
-           <rect>
-            <x>10</x>
-            <y>110</y>
-            <width>160</width>
-            <height>22</height>
-           </rect>
-          </property>
-          <layout class="QHBoxLayout" name="unitSelect">
-           <item>
-            <widget class="QLabel" name="label_9">
-             <property name="text">
-              <string>Units</string>
-             </property>
+         <layout class="QGridLayout" name="gridLayout_5">
+          <item row="1" column="0" colspan="2">
+           <layout class="QVBoxLayout" name="sensorLocnDesc">
+            <item>
+             <layout class="QHBoxLayout" name="sensorLoc">
+              <item>
+               <widget class="QLabel" name="label_4">
+                <property name="minimumSize">
+                 <size>
+                  <width>89</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>Sensor Location</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="sensorLocnEntry">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEF</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="locnStringLength">
+                <property name="maximumSize">
+                 <size>
+                  <width>20</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_7">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>/ 32</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_3">
+              <item>
+               <widget class="QLabel" name="label_5">
+                <property name="text">
+                 <string>Sensor Description</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="sensorDescEntry">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEF</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="descStringLength">
+                <property name="maximumSize">
+                 <size>
+                  <width>20</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_8">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>/ 32</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+          <item row="2" column="0">
+           <layout class="QHBoxLayout" name="unitSelect">
+            <item>
+             <widget class="QLabel" name="label_9">
+              <property name="text">
+               <string>Units</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QRadioButton" name="unitsEnglish">
+              <property name="text">
+               <string>English</string>
+              </property>
+              <attribute name="buttonGroup">
+               <string notr="true">buttonGroup</string>
+              </attribute>
+             </widget>
+            </item>
+            <item>
+             <widget class="QRadioButton" name="unitsMetric">
+              <property name="text">
+               <string>Metric</string>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>10</width>
+                <height>10</height>
+               </size>
+              </property>
+              <attribute name="buttonGroup">
+               <string notr="true">buttonGroup</string>
+              </attribute>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="writeSensorConfig">
+              <property name="text">
+               <string>Write Sensor Configuration</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="3" column="0">
+           <widget class="QTabWidget" name="confTabs">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="tabShape">
+             <enum>QTabWidget::Triangular</enum>
+            </property>
+            <property name="currentIndex">
+             <number>0</number>
+            </property>
+            <widget class="QWidget" name="DataConfig">
+             <attribute name="title">
+              <string>Data Config</string>
+             </attribute>
+             <layout class="QGridLayout" name="gridLayout">
+              <item row="1" column="0">
+               <layout class="QGridLayout" name="dataConfParams">
+                <property name="sizeConstraint">
+                 <enum>QLayout::SetMaximumSize</enum>
+                </property>
+                <item row="4" column="2">
+                 <widget class="QCheckBox" name="dataConfPushEnable">
+                  <property name="text">
+                   <string>Push Enable</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QRadioButton" name="dataConfStorageDisabled">
+                  <property name="text">
+                   <string>Storage Disabled</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="1">
+                 <widget class="QRadioButton" name="dataConfFillOnceMode">
+                  <property name="text">
+                   <string>Fill-Once Mode</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="2">
+                 <widget class="QComboBox" name="dataFormatSelect">
+                  <item>
+                   <property name="text">
+                    <string>Choose data format...</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Z1</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>SS105</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>SS105 Multi-Drop</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Z4 Two Loop Speed</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Z4 One Loop Speed</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Z4 Two Loop Pulsed</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Z4 One Loop Pulsed</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+                <item row="6" column="2">
+                 <widget class="QLineEdit" name="dataConfDestSubID"/>
+                </item>
+                <item row="2" column="2">
+                 <widget class="QComboBox" name="dataPortSelect">
+                  <item>
+                   <property name="text">
+                    <string>Choose port...</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>RS-485</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>RS-232</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Expansion 1</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Expansion 2</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+                <item row="1" column="2">
+                 <widget class="QComboBox" name="dataTypeSelect">
+                  <item>
+                   <property name="text">
+                    <string>Select data type...</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Event Data</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Presence Data</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Interval Data</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+                <item row="6" column="0">
+                 <widget class="QLabel" name="label_15">
+                  <property name="text">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Loop Size&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_6">
+                  <property name="text">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Data Interval (secs)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QSpinBox" name="dataInterval"/>
+                </item>
+                <item row="3" column="0">
+                 <widget class="QLabel" name="label_14">
+                  <property name="text">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Loop Separation&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="1">
+                 <widget class="QLabel" name="label_13">
+                  <property name="text">
+                   <string>Push to Dest. Sub-ID (0-255)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QLabel" name="label_10">
+                  <property name="text">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Interval Mode&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="0">
+                 <widget class="QLineEdit" name="loopSep"/>
+                </item>
+                <item row="3" column="1">
+                 <widget class="QRadioButton" name="dataConfCircularMode">
+                  <property name="text">
+                   <string>Circular Mode</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="0">
+                 <widget class="QLineEdit" name="loopSize"/>
+                </item>
+                <item row="7" column="1">
+                 <widget class="QLabel" name="label_18">
+                  <property name="text">
+                   <string>Push to Dest ID (0-65535)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="2">
+                 <widget class="QLineEdit" name="dataConfDestID"/>
+                </item>
+               </layout>
+              </item>
+              <item row="0" column="0">
+               <widget class="QPushButton" name="loadDataConf">
+                <property name="text">
+                 <string>Load Data Conf</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </widget>
-           </item>
-           <item>
-            <widget class="QRadioButton" name="unitsEnglish">
-             <property name="text">
-              <string>English</string>
-             </property>
-             <attribute name="buttonGroup">
-              <string notr="true">buttonGroup</string>
+            <widget class="QWidget" name="tab_2">
+             <attribute name="title">
+              <string>Sensor Time</string>
              </attribute>
             </widget>
-           </item>
-           <item>
-            <widget class="QRadioButton" name="unitsMetric">
-             <property name="text">
-              <string>Metric</string>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>10</width>
-               <height>10</height>
-              </size>
-             </property>
-             <attribute name="buttonGroup">
-              <string notr="true">buttonGroup</string>
+            <widget class="QWidget" name="tab">
+             <attribute name="title">
+              <string>Page</string>
              </attribute>
             </widget>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="layoutWidget">
-          <property name="geometry">
-           <rect>
-            <x>11</x>
-            <y>51</y>
-            <width>353</width>
-            <height>54</height>
-           </rect>
-          </property>
-          <layout class="QVBoxLayout" name="sensorLocnDesc">
-           <item>
-            <layout class="QHBoxLayout" name="sensorLoc">
-             <item>
-              <widget class="QLabel" name="label_4">
-               <property name="minimumSize">
-                <size>
-                 <width>89</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Sensor Location</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="sensorLocnEntry">
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEF</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="locnStringLength">
-               <property name="maximumSize">
-                <size>
-                 <width>20</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>0</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="label_7">
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>/ 32</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_3">
-             <item>
-              <widget class="QLabel" name="label_5">
-               <property name="text">
-                <string>Sensor Description</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="sensorDescEntry">
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEF</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="descStringLength">
-               <property name="maximumSize">
-                <size>
-                 <width>20</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>0</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="label_8">
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>/ 32</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-          </layout>
-         </widget>
+            <widget class="QWidget" name="tab_3">
+             <attribute name="title">
+              <string>Page</string>
+             </attribute>
+            </widget>
+            <widget class="QWidget" name="tab_4">
+             <attribute name="title">
+              <string>Page</string>
+             </attribute>
+            </widget>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QSplitter" name="splitter">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>Orientation (N,E,S,W)</string>
+             </property>
+            </widget>
+            <widget class="QLineEdit" name="sensorOrientation">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maxLength">
+              <number>1</number>
+             </property>
+            </widget>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>
      </widget>
     </item>
-    <item row="0" column="1">
-     <widget class="QGroupBox" name="groupBox_2">
-      <property name="title">
-       <string>Data Collection</string>
-      </property>
-     </widget>
-    </item>
    </layout>
-  </widget>
-  <widget class="QMenuBar" name="menuBar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1209</width>
-     <height>21</height>
-    </rect>
-   </property>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
