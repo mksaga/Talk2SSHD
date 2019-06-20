@@ -1120,15 +1120,15 @@ uint16_t extract16BitFixedPt(QByteArray *arr, int i)
  * @param t
  * @return
  */
-double fixedPtToDouble(uint16_t t)
+float fixedPtToFloat(uint16_t t)
 {
     // extract integer part
     uint8_t tI = t >> 8;
 
     // extract decimal part
-    double tD = (t & 0x00FF) / 256.0;
+    float tD = (t & 0x00FF) / 256.0;
 
-    return (static_cast<double>(tI) + tD);
+    return (static_cast<float>(tI) + tD);
 }
 
 /**
@@ -1519,7 +1519,7 @@ QByteArray gen_global_all_uart_push_mode_write(uint8_t *Crc8Table,
     return msg;
 }
 
-void parse_speed_bin_conf_read(QByteArray *resp, QString eS)
+void parse_speed_bin_conf_read(QByteArray *resp, int *nBins, float *fArr, QString eS)
 {
     // error handling
     if ((*resp).at(0) == 'E') {
@@ -1538,12 +1538,14 @@ void parse_speed_bin_conf_read(QByteArray *resp, QString eS)
     }
 
     int numBinsDefined = resp->at(12);
+    *nBins = numBinsDefined;
 
     int i;
     int locn = 14;
     for (i=0; i<numBinsDefined; i++) {
         uint16_t threshold = extract16BitFixedPt(resp, locn);
-        double d = fixedPtToDouble(threshold);
+        float f = fixedPtToFloat(threshold);
+        *(fArr + i) = f;
         locn += 2;
     }
 }

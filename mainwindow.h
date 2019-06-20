@@ -33,13 +33,18 @@ class MainWindow : public QMainWindow
 
     char laneGridInitialized = 0;
     QLabel* laneLabels[10][3];
+    QLabel* speedBinLabels[15][2];
+
+    float speedBins[15];
+    int numSpeedBins;
+    char speedBinGridInitialized = 0;
 
     sensor_config *lastReadConf;
     sensor_config *lastWrittenConf;
     sensor_data_config *lastReadDataConf;
     sensor_datetime *lastReadDateTime;
     approach *appr;
-    QTableWidgetItem twi[16];
+
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
@@ -49,7 +54,7 @@ private:
     void refreshActiveLanes();
     void refreshDateTime();
     bool refreshSensorConfig();
-
+    void refreshSpeedBins();
 
 private slots:
     void on_refreshComPorts_clicked();

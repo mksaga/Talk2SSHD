@@ -74,6 +74,8 @@ QByteArray gen_global_all_uart_push_mode_write(uint8_t *Crc8Table,
 QByteArray gen_speed_bin_conf_write(uint8_t *Crc8Table, uint16_t *bins,
                                     int numBins, uint16_t destId);
 
+void parse_speed_bin_conf_read(QByteArray *resp, int *nBins, float *fArr, QString eS);
+
 QByteArray gen_dir_bin_conf_write(uint8_t *Crc8Table, char dirBinEnabled,
                                   uint16_t destId);
 
@@ -82,7 +84,7 @@ QByteArray gen_offset_sensor_time(uint8_t *Crc8Table,
                                   uint16_t offset,
                                   uint16_t destId);
 
-double fixedPtToDouble(uint16_t t);
+float fixedPtToFloat(uint16_t t);
 uint16_t extract16BitFixedPt(QByteArray *arr, int locn);
 
 #endif // COMMANDS_H

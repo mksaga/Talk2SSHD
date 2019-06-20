@@ -514,6 +514,47 @@ void MainWindow::refreshActiveLanes()
 
 }
 
+void MainWindow::refreshSpeedBins()
+{
+    memo = genReadMsg(Crc8Table, 0x1D, 15, sensorId);
+    write_message_to_sensor(port, &memo, &resp, Crc8Table, &errCode);
+    parse_speed_bin_conf_read(&resp, &numSpeedBins, speedBins, errString);
+    if (errString.startsWith('E')) return;
+    QString q = QString("<html><head/><body><p align=\"right\"><span style=\" font-size:12pt; font-weight:600;\">%1</span></p></body></html>").arg(numSpeedBins);
+    ui->numSpeedBinsConfigd->setText(q);
+
+    for (int r = 0; r < numSpeedBins; r++) {
+        q = QString("Bin %1").arg(r + 1);
+        if (speedBinGridInitialized == 0) {
+            speedBinLabels[r][0] = new QLabel();
+            speedBinLabels[r][1] = new QLabel();
+        }
+        speedBinLabels[r][0]->setText(q);
+        QString q2;
+        if (*(speedBins + r) == 255) {
+             q2 = QString("%1 (remaining events)").arg(*(speedBins + r));
+        } else {
+             q2 = QString("%1").arg(*(speedBins + r));
+        }
+        speedBinLabels[r][1]->setText(q2);
+        speedBinLabels[r][1]->setAlignment(Qt::AlignRight);
+
+        if (speedBinGridInitialized) {}
+        else {
+            if (r==0) {
+                QLabel *t0 = new QLabel("Bin Number");
+                QLabel *t1 = new QLabel("Lower Bound Speed");
+                t1->setAlignment(Qt::AlignCenter);
+                ui->speedBinGrid->addWidget(t0, 0, 0);
+                ui->speedBinGrid->addWidget(t1, 0, 1);
+            }
+            ui->speedBinGrid->addWidget(speedBinLabels[r][0], r+1, 0);
+            ui->speedBinGrid->addWidget(speedBinLabels[r][1], r+1, 1);
+        }
+    }
+    speedBinGridInitialized = 1;
+}
+
 void MainWindow::on_dataTypeSelect_currentIndexChanged(const QString &arg1)
 {
     if (arg1.startsWith("Event")) {
@@ -599,6 +640,8 @@ void MainWindow::on_confTabs_tabBarClicked(int index)
         refreshDateTime();
     } else if (index == 4) {
         refreshActiveLanes();
+    } else if (index == 5) {
+        refreshSpeedBins();
     }
 }
 
