@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include <QByteArray>
+#include <QDateTime>
 #include <QMessageBox>
 #include <QSerialPort>
 #include <QSerialPortInfo>
@@ -67,6 +68,8 @@ MainWindow::MainWindow(QWidget *parent) :
     button->setAutoFillBackground(true);
     button->setPalette(pal);
     button->update();
+
+    ui->dCDateTimeSelect->setCalendarPopup(true);
 }
 
 MainWindow::~MainWindow()
@@ -462,6 +465,7 @@ void MainWindow::refreshDateTime()
 
 void MainWindow::refreshActiveLanes()
 {
+    laneInfoRead = 1;
     memo = genReadMsg(Crc8Table, 0x27, 10, sensorId);
     write_message_to_sensor(port, &memo, &resp, Crc8Table, &errCode);
     parse_active_lane_info_read_resp(&resp, laneArr, &numLanes, errString);
@@ -645,8 +649,9 @@ void MainWindow::on_confTabs_tabBarClicked(int index)
     }
 }
 
-void MainWindow::on_readApproachConfBtn_clicked()
+void MainWindow::refreshApproachInfo()
 {
+    approachInfoRead = 1;
     memo = genReadMsg(Crc8Table, 0x28, 4, sensorId);
     write_message_to_sensor(port, &memo, &resp, Crc8Table, &errCode);
     numApproaches = parse_approach_info_read_resp(&resp, appr, errString);
@@ -677,6 +682,11 @@ void MainWindow::on_readApproachConfBtn_clicked()
     }
 }
 
+void MainWindow::on_readApproachConfBtn_clicked()
+{
+    refreshApproachInfo();
+}
+
 void MainWindow::on_refreshClassConfig_clicked()
 {
     memo = genReadMsg(Crc8Table, 0x13, 0, sensorId);
@@ -693,5 +703,74 @@ void MainWindow::on_refreshClassConfig_clicked()
         QLabel *l = new QLabel(q);
         QLabel *l2 = new QLabel(q2);
         ui->classGrid->addRow(l, l2);
+    }
+}
+
+bool MainWindow::validateIntervalDataSetup()
+{
+    QString q;
+    bool isNum = false;
+    int x;
+    if (ui->dCSingleApprRadio->isChecked()) {
+        q = ui->dCSingleApprNum->text();
+        x = q.toInt(&isNum);
+        if (isNum) {
+            if (approachInfoRead == 1) {
+                if (x <= numApproaches) {
+                    // validate time input
+                } else {
+                    q = QString("Only %1 approaches configured.").arg(numApproaches);
+                    QMessageBox::critical(this, "Talk2SSHD", q);
+                    return false;
+                }
+            } else {
+                QMessageBox::critical(this, "Talk2SSHD", "Please refresh sensor "
+                                                         "approach configuration first.");
+                return false;
+            }
+        } else {
+            QMessageBox::critical(this, "Talk2SSHD", "Approach number must be a number greater than 0.");
+            return false;
+        }
+    } else if (ui->dCSingleLaneRadio->isChecked()) {
+        q = ui->dCSingleLaneNum->text();
+        x = q.toInt(&isNum);
+        if (isNum) {
+            if (laneInfoRead == 1) {
+                if (x <= numLanes) {
+                    // validate time input
+                } else {
+                    q = QString("Only %1 lanes configured.").arg(numLanes);
+                    QMessageBox::critical(this, "Talk2SSHD", q);
+                    return false;
+                }
+            } else {
+                QMessageBox::critical(this, "Talk2SSHD", "Please refresh active "
+                                                         "lane information first.");
+                return false;
+            }
+        } else {
+            QMessageBox::critical(this, "Talk2SSHD", "Lane number must be a number greater than 0.");
+            return false;
+        }
+    }
+    // validate timestamp
+    QDateTime now = QDateTime::currentDateTime();
+    QDateTime entry = ui->dCDateTimeSelect->dateTime();
+
+    if (entry <= now) {
+        return true;
+    } else {
+        QMessageBox::critical(this, "Talk2SSHD", "Hold up now! Time entered must be in the past, son.");
+        return false;
+    }
+}
+
+void MainWindow::on_writeDataSetup_clicked()
+{
+    if (validateIntervalDataSetup()) {
+        printf("True!\n");
+    } else {
+        printf("Nope!\n");
     }
 }

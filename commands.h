@@ -2,7 +2,10 @@
 #define COMMANDS_H
 
 #include <QByteArray>
+#include <QDate>
+#include <QDateTime>
 #include <QSerialPort>
+#include <QTime>
 #include "sensor_utils.h"
 
 void write_message_to_sensor(QSerialPort *port,
@@ -83,6 +86,15 @@ QByteArray gen_offset_sensor_time(uint8_t *Crc8Table,
                                   uint8_t signFlag,
                                   uint16_t offset,
                                   uint16_t destId);
+
+QByteArray getVarSizeIntervalDataByTimestamp(uint8_t *Crc8Table,
+                                             uint8_t requestType,
+                                             uint16_t destId,
+                                             uint8_t destSubnetId,
+                                             uint8_t seqNumber,
+                                             uint16_t index,
+                                             QDateTime dt,
+                                             uint8_t singleNum = 0);
 
 float fixedPtToFloat(uint16_t t);
 uint16_t extract16BitFixedPt(QByteArray *arr, int locn);

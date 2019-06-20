@@ -39,6 +39,9 @@ class MainWindow : public QMainWindow
     int numSpeedBins;
     char speedBinGridInitialized = 0;
 
+    char approachInfoRead = 0;
+    char laneInfoRead = 0;
+
     sensor_config *lastReadConf;
     sensor_config *lastWrittenConf;
     sensor_data_config *lastReadDataConf;
@@ -51,10 +54,12 @@ public:
     ~MainWindow();
 
 private:
+    void refreshApproachInfo();
     void refreshActiveLanes();
     void refreshDateTime();
     bool refreshSensorConfig();
     void refreshSpeedBins();
+    bool validateIntervalDataSetup();
 
 private slots:
     void on_refreshComPorts_clicked();
@@ -76,6 +81,8 @@ private slots:
     void on_readApproachConfBtn_clicked();
 
     void on_refreshClassConfig_clicked();
+
+    void on_writeDataSetup_clicked();
 
 private:
     Ui::MainWindow *ui;

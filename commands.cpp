@@ -1743,3 +1743,130 @@ QByteArray gen_offset_sensor_time(uint8_t *Crc8Table,
     msg.append(crc);
     return msg;
 }
+
+QByteArray getVarSizeIntervalDataByTimestamp(uint8_t *Crc8Table,
+                                             uint8_t requestType,
+                                             uint16_t destId,
+                                             uint8_t destSubnetId,
+                                             uint8_t seqNumber,
+                                             uint16_t index,
+                                             QDateTime dt,
+                                             uint8_t singleNum)
+{
+    QByteArray msg;
+
+    // message version (2)
+    msg.append('Z');
+    msg.append('1');
+
+    // dst. subnet id (1)
+    msg.append(destSubnetId);
+
+    // dst. ID (2)
+    msg.append(destId >> 8);
+    uint8_t lower8 = destId;
+    msg.append(lower8);
+
+    // source subnet ID (1)
+    msg.append(zero);
+
+    // source ID (2)
+    msg.append(zero);
+    msg.append(zero);
+
+    // seq. number (1)
+    msg.append(seqNumber);
+
+    // payload size (1)
+    msg.append(7);
+
+    // header CRC (1)
+    unsigned char crc = SmCommsComputeCrc8(Crc8Table,
+                                           &msg, 10);
+    msg.append(crc);
+
+    // start of body
+
+    // msg ID (1)
+    msg.append(0x74);
+
+    // msg sub-ID (1)
+    msg.append(requestType);
+
+    // msg type (1, read)
+    msg.append(zero);
+
+    // index (3)
+    msg.append(zero);
+    uint8_t t1 = (index >> 8) & 0x00FF;
+    msg.append(t1);
+    t1 = static_cast<uint8_t>(index & 0x00FF);
+    msg.append(t1);
+
+    // date (4)
+    int yr =  dt.date().year();
+    int mo = dt.date().month();
+    int day =  dt.date().day();
+
+    uint8_t d = static_cast<uint8_t>((day >> 24) & 0x000000FF);
+    uint8_t m = static_cast<uint8_t>((mo  >> 24) & 0x000000FF);
+    uint16_t y = static_cast<uint16_t>((yr >> 8) & 0x0000FFFF);
+
+    // 31-24: blank (spares)
+    msg.append(zero);
+
+    // 23-16: upper 3 are blank, lower 5 are part of year
+    uint8_t tmp;
+    tmp = static_cast<uint8_t>((y >> 7) & 0x001F);
+    msg.append(tmp);
+
+    // 15-8: upper 7 are year, LSB contains upper bit of month
+    tmp = static_cast<uint8_t>((y) & 0x007F);
+    tmp <<= 1;
+    tmp |= (m >> 3);
+    msg.append(tmp);
+
+    // 7-0: upper 3 are remainder of month, lower 5 contain day
+    tmp = ((m) & 0x07) << 5;
+    tmp |= (d);
+    msg.append(tmp);
+
+    // time (4)
+    int hrs = dt.time().hour();
+    int mins = dt.time().minute();
+    int secs = dt.time().second();
+
+    uint8_t h = static_cast<uint8_t>((hrs >> 24) & 0x000000FF);
+    uint8_t min = static_cast<uint8_t>((mins >> 24) & 0x000000FF);
+    uint8_t sec = static_cast<uint8_t>((secs >> 24) & 0x000000FF);
+    uint16_t ms = 0;
+
+    // 31-24: upper 5 are spares, lower 3 are hours
+    tmp = ((h) & 0x1C) >> 2;
+    msg.append(tmp);
+
+    // 23-16: upper 2 are hours, lower 6 are minutes
+    tmp = ((h) & 0x03) << 6;
+    tmp |= min;
+    msg.append(tmp);
+
+    // 15-8: upper 6 are seconds, lower 2 are for ms
+    tmp = (sec) << 2;
+    uint8_t tmp2;
+    tmp2 = static_cast<uint8_t>(((ms) & 0x0300) >> 8);
+    msg.append((tmp | tmp2));
+
+    // 7-0: ms
+    tmp = static_cast<uint8_t>(ms & 0x00FF);
+    msg.append(tmp);
+
+
+    // lane/approach number (1)
+    msg.append(singleNum);
+
+    QByteArray body = msg.right(19);
+
+    crc = SmCommsComputeCrc8(Crc8Table, &body, 19);
+    msg.append(crc);
+    return msg;
+}

@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1272</width>
-    <height>701</height>
+    <width>1415</width>
+    <height>799</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -977,12 +977,15 @@
          <property name="title">
           <string>Data Collection Setup</string>
          </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
          <widget class="QPushButton" name="writeDataSetup">
           <property name="geometry">
            <rect>
-            <x>540</x>
-            <y>40</y>
-            <width>137</width>
+            <x>660</x>
+            <y>70</y>
+            <width>141</width>
             <height>23</height>
            </rect>
           </property>
@@ -993,47 +996,99 @@
 }</string>
           </property>
           <property name="text">
-           <string>Send Setup to Sensor</string>
+           <string>Start Retrieving Data</string>
           </property>
          </widget>
-         <widget class="QRadioButton" name="radioButton">
+         <widget class="QLabel" name="label_21">
           <property name="geometry">
            <rect>
-            <x>120</x>
-            <y>40</y>
-            <width>85</width>
-            <height>20</height>
+            <x>10</x>
+            <y>20</y>
+            <width>221</width>
+            <height>21</height>
            </rect>
           </property>
           <property name="text">
-           <string>RadioButton</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;What kind of data do you want?&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
          </widget>
-         <widget class="QRadioButton" name="radioButton_2">
+         <widget class="QWidget" name="formLayoutWidget_2">
           <property name="geometry">
            <rect>
             <x>230</x>
-            <y>40</y>
-            <width>85</width>
-            <height>20</height>
+            <y>20</y>
+            <width>241</width>
+            <height>80</height>
            </rect>
           </property>
-          <property name="text">
-           <string>RadioButton</string>
-          </property>
+          <layout class="QFormLayout" name="formLayout">
+           <item row="0" column="0">
+            <widget class="QRadioButton" name="dCSingleLaneRadio">
+             <property name="text">
+              <string>Single Lane</string>
+             </property>
+             <attribute name="buttonGroup">
+              <string notr="true">buttonGroup_2</string>
+             </attribute>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="dCSingleLaneNum">
+             <property name="text">
+              <string>Enter Lane Number</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QRadioButton" name="dCSingleApprRadio">
+             <property name="text">
+              <string>Single Approach</string>
+             </property>
+             <attribute name="buttonGroup">
+              <string notr="true">buttonGroup_2</string>
+             </attribute>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="dCSingleApprNum">
+             <property name="text">
+              <string>Enter Approach Number</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0" colspan="2">
+            <widget class="QRadioButton" name="dCGetAllRadio">
+             <property name="text">
+              <string>All Lanes and Approaches</string>
+             </property>
+             <attribute name="buttonGroup">
+              <string notr="true">buttonGroup_2</string>
+             </attribute>
+            </widget>
+           </item>
+          </layout>
          </widget>
-         <widget class="QRadioButton" name="radioButton_3">
+         <widget class="QWidget" name="">
           <property name="geometry">
            <rect>
-            <x>360</x>
-            <y>40</y>
-            <width>85</width>
-            <height>20</height>
+            <x>480</x>
+            <y>20</y>
+            <width>326</width>
+            <height>47</height>
            </rect>
           </property>
-          <property name="text">
-           <string>RadioButton</string>
-          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+           <item>
+            <widget class="QLabel" name="label_22">
+             <property name="text">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Enter Timestamp&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDateTimeEdit" name="dCDateTimeSelect"/>
+           </item>
+          </layout>
          </widget>
         </widget>
        </item>
@@ -1042,6 +1097,39 @@
          <property name="title">
           <string>View Real-Time Data</string>
          </property>
+         <widget class="QTextEdit" name="textEdit">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>30</y>
+            <width>801</width>
+            <height>551</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QDial" name="dial">
+          <property name="geometry">
+           <rect>
+            <x>260</x>
+            <y>140</y>
+            <width>50</width>
+            <height>64</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="dCTimestampEntry">
+          <property name="geometry">
+           <rect>
+            <x>430</x>
+            <y>210</y>
+            <width>324</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>ex. 04/19/2018 12:30 AM</string>
+          </property>
+         </widget>
         </widget>
        </item>
       </layout>
@@ -1064,5 +1152,6 @@
  <connections/>
  <buttongroups>
   <buttongroup name="buttonGroup"/>
+  <buttongroup name="buttonGroup_2"/>
  </buttongroups>
 </ui>
