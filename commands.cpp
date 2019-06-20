@@ -562,7 +562,7 @@ QByteArray gen_data_conf_write(uint8_t *Crc8Table,
     return msg;
 }
 
-void parse_global_push_mode_read_resp(QByteArray *response,
+uint8_t parse_global_push_mode_read_resp(QByteArray *response,
                                       QString errString)
 {
     // error handling
@@ -573,12 +573,12 @@ void parse_global_push_mode_read_resp(QByteArray *response,
         } else {
             errString = "Write timed out";
         }
-        return;
+        return -1;
     }
 
     if ((*response).size() < 16) {
         errString = "Response too short, incomplete";
-        return;
+        return -1;
     }
     printf ("Global Push State: ");
     if (response->at(14)) {
@@ -586,6 +586,7 @@ void parse_global_push_mode_read_resp(QByteArray *response,
     } else {
         printf("Disabled\n");
     }
+    return response->at(14);
 }
 QByteArray gen_global_push_mode_write(uint8_t *Crc8Table,
                                       uint8_t globalPushState,
@@ -699,9 +700,9 @@ void parse_sensor_time_read_resp(QByteArray *response, QString errString,
     // extract day: lower 5 bits
     day = (response->at(17)) & 0x1F;
 
-    printf("Year: %u\n", year);
-    printf("Month: %u\n", month);
-    printf("Day: %u\n", day);
+//    printf("Year: %u\n", year);
+//    printf("Month: %u\n", month);
+//    printf("Day: %u\n", day);
 
     uint8_t hrs;
     uint8_t mins;
@@ -728,7 +729,7 @@ void parse_sensor_time_read_resp(QByteArray *response, QString errString,
     d->secs = secs;
     d->ms = ms;
 
-    printf("Time: %02u:%02u:%02u.%03u\n", hrs, mins, secs, ms);
+//    printf("Time: %02u:%02u:%02u.%03u\n", hrs, mins, secs, ms);
 }
 
 /**
@@ -848,7 +849,7 @@ QByteArray gen_sensor_time_write(uint8_t *Crc8Table,
  * @return
  */
 
-void parse_approach_info_read_resp(QByteArray *response,
+int parse_approach_info_read_resp(QByteArray *response,
                                    approach *approaches,
                                    QString errString)
 {
@@ -860,20 +861,21 @@ void parse_approach_info_read_resp(QByteArray *response,
         } else {
             errString = "Write timed out";
         }
-        return;
+        return -1;
     }
 
     if ((*response).size() < 16) {
         errString = "Response too short, incomplete";
-        return;
+        return -1;
     }
 
     //int payloadSize = response->at(9);
     int numReturnedApproaches = response->at(12);
     int numApprConfigured = response->at(14);
-    printf("\n");
-    printf("Num Returned Apprs: %u\t", numReturnedApproaches);
-    printf("Num Configured Approaches: %u\n", numApprConfigured);
+
+//    printf("\n");
+//    printf("Num Returned Apprs: %u\t", numReturnedApproaches);
+//    printf("Num Configured Approaches: %u\n", numApprConfigured);
 
     int i, j;
     int locn;
@@ -959,22 +961,23 @@ void parse_approach_info_read_resp(QByteArray *response,
 
     // print data associated with each approach
 
-    printf("\n");
-    for (i=1; i<=numReturnedApproaches; i++) {
-        if (i <= numApprConfigured) {
-            a = approaches + i - 1;
-            const char *descr = (a->description).toLatin1().data();
-            printf("Approach %d: %s\t", i, descr);
-            printf("Direction: %c\t", a->direction);
-            printf("Num Lanes: %u\t", a->numLanes);
-            printf("Lanes assigned: ");
-            uint8_t *p = a->lanesAssigned;
-            for (j=0; j<a->numLanes; j++) {
-                printf("%02u ", *(p+j));
-            }
-            printf("\n");
-        }
-    }
+//    printf("\n");
+//    for (i=1; i<=numReturnedApproaches; i++) {
+//        if (i <= numApprConfigured) {
+//            a = approaches + i - 1;
+//            const char *descr = (a->description).toLatin1().data();
+//            printf("Approach %d: %s\t", i, descr);
+//            printf("Direction: %c\t", a->direction);
+//            printf("Num Lanes: %u\t", a->numLanes);
+//            printf("Lanes assigned: ");
+//            uint8_t *p = a->lanesAssigned;
+//            for (j=0; j<a->numLanes; j++) {
+//                printf("%02u ", *(p+j));
+//            }
+//            printf("\n");
+//        }
+//    }
+    return numApprConfigured;
 }
 QByteArray gen_approach_info_write(uint8_t *Crc8Table,
                                    uint8_t numApproaches,
@@ -1134,7 +1137,7 @@ double fixedPtToDouble(uint16_t t)
  * @param bounds: pointer to array where classifications currently on the sensor will be stored
  * @param errString
  */
-void parse_classif_read_resp(QByteArray *response, double *bounds, QString eS)
+void parse_classif_read_resp(QByteArray *response, double *bounds, int *nC, QString eS)
 {
     // error handling
     if ((*response).at(0) == 'E') {
@@ -1153,6 +1156,7 @@ void parse_classif_read_resp(QByteArray *response, double *bounds, QString eS)
     }
 
     int numClasses = response->at(12);
+    *nC = numClasses;
     printf("\nNum Classes: %u\n", numClasses);
 
     int i;
@@ -1275,7 +1279,7 @@ QByteArray gen_classif_write(uint8_t *Crc8Table,
  */
 
 
-lane * parse_active_lane_info_read_resp(QByteArray *response, QString eS)
+void parse_active_lane_info_read_resp(QByteArray *response, lane *laneArray, int *numConfd, QString eS)
 {
     // error handling
     if ((*response).at(0) == 'E') {
@@ -1285,48 +1289,61 @@ lane * parse_active_lane_info_read_resp(QByteArray *response, QString eS)
         } else {
             eS = "Write timed out";
         }
-        return nullptr;
+        return;
     }
 
     if ((*response).size() < 16) {
         eS = "Response too short, incomplete";
-        return nullptr;
+        return;
     }
 
     int numLanesReturned = response->at(12);
     int locn = 14;
     int numActiveConfiguredLanes = response->at(14);
+    *numConfd = numActiveConfiguredLanes;
+    locn += 3;
 
-    printf("Num Lanes Returned: %u\t", numLanesReturned);
-    printf("Num Lanes Config'd: %u\n", numActiveConfiguredLanes);
-
-    lane *laneArray = new lane[numActiveConfiguredLanes];
+//    printf("Num Lanes Returned: %u\t", numLanesReturned);
+//    printf("Num Lanes Config'd: %u\n", numActiveConfiguredLanes);
 
     // extract each lane's information
     for (int i=1; i<=numLanesReturned; i++) {
         if (i <= numActiveConfiguredLanes) {
             lane l = *(laneArray + i - 1);
             (void)l;    // to shut up compiler warnings
-            char *desc = new char[8];
-            memcpy(desc, *(response + locn), 8);
-            l.description = desc;
-            locn += 8;
+
+            (laneArray+i-1)->description = new char[8];
+            int strLocn = 0;
+            if (response->at(locn) == 0) {
+                int j;
+                char onChar = 0;
+                for (j=0; j<16; j++) {
+                    if (onChar) {
+                        *((laneArray+i-1)->description + strLocn) = response->at(locn);
+                        strLocn++;
+                        locn++;
+                        onChar = 0;
+                    } else {
+                        onChar=1;
+                        locn++;
+                    }
+                }
             char dir = response->at(locn);
-            l.direction = dir;
+            if (dir) { dir = 'L'; } else { dir = 'R'; }
+            (laneArray+i-1)->direction = dir;
             locn++;
+            }
         }
     }
 
-    for (int i=1; i<=numLanesReturned; i++) {
-        if (i <= numActiveConfiguredLanes) {
-            lane l = *(laneArray + i - 1);
-            printf("Lane %u\t", i+1);
-            printf("Desc: %s\t", l.description);
-            printf("Direction: %u\n", l.direction);
-        }
-    }
-
-    return laneArray;
+//    for (int i=1; i<=numLanesReturned; i++) {
+//        if (i <= numActiveConfiguredLanes) {
+//            lane l = *(laneArray + i - 1);
+//            printf("Lane %u\t", i+1);
+//            printf("Desc: %s\t", l.description);
+//            printf("Direction: %u\n", l.direction);
+//        }
+//    }
 }
 
 QByteArray gen_active_lane_info_write(uint8_t *Crc8Table,

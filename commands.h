@@ -35,7 +35,7 @@ QByteArray gen_data_conf_write(uint8_t *Crc8Table,
                                sensor_data_config *new_dc,
                                uint16_t dest_id);
 
-void parse_global_push_mode_read_resp(QByteArray *response, QString errS);
+uint8_t parse_global_push_mode_read_resp(QByteArray *response, QString errS);
 
 QByteArray gen_global_push_mode_write(uint8_t *Crc8Table,
                                       uint8_t globalPushState,
@@ -48,19 +48,19 @@ QByteArray gen_sensor_time_write(uint8_t *Crc8Table,
                                  sensor_datetime *d,
                                  uint16_t dest_id);
 
-void parse_approach_info_read_resp(QByteArray *response,
+int parse_approach_info_read_resp(QByteArray *response,
                                    approach *approaches,
                                    QString errString);
 
 QByteArray gen_approach_info_write(uint8_t *Crc8Table, uint8_t numAppr,
                                    approach *aW, uint16_t dest_id);
 
-void parse_classif_read_resp(QByteArray *resp, double *bounds, QString eS);
+void parse_classif_read_resp(QByteArray *resp, double *bounds, int *nC, QString eS);
 
 QByteArray gen_classif_write(uint8_t *Crc8Table, uint16_t *bounds,
                              uint8_t numClasses, uint16_t dest_id);
 
-lane * parse_active_lane_info_read_resp(QByteArray *resp, QString eS);
+void parse_active_lane_info_read_resp(QByteArray *resp, lane *l, int *nC, QString eS);
 
 QByteArray gen_active_lane_info_write(uint8_t *Crc8Table,lane *laneData,
                                       int numActiveLanes, uint16_t destId);
