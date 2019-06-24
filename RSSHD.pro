@@ -28,12 +28,14 @@ SOURCES += \
         commands.cpp \
         main.cpp \
         mainwindow.cpp \
-        sensor_utils.cpp
+        sensor_utils.cpp \
+        serialworker.cpp \
 
 HEADERS += \
         commands.h \
         mainwindow.h \
-        sensor_utils.h
+        sensor_utils.h \
+        serialworker.h
 
 FORMS += \
         mainwindow.ui

@@ -5,10 +5,11 @@
 #include <QMainWindow>
 #include <QSerialPort>
 #include <QTableWidgetItem>
-//#include <QThread>
+#include <QThread>
 #include <QTimer>
 
 #include <sensor_utils.h>
+#include <serialworker.h>
 
 namespace Ui {
 class MainWindow;
@@ -26,7 +27,7 @@ class MainWindow : public QMainWindow
     uint16_t errCode;
     QTimer *sensorClock;
     int numApproaches;
-    int numClasses;
+
     int numLanes;
     double classBounds[8] = {0};
     lane laneArr[10];
@@ -36,10 +37,16 @@ class MainWindow : public QMainWindow
     QLabel* speedBinLabels[15][2];
 
     float speedBins[15];
-    int numSpeedBins;
     char speedBinGridInitialized = 0;
 
+    int numClasses;
+    int numSpeedBins;
+    int numDirectionBins;
+
+    uint16_t dataInterval;
+
     char approachInfoRead = 0;
+    char dataInfoRead = 0;
     char laneInfoRead = 0;
 
     sensor_config *lastReadConf;
@@ -56,10 +63,16 @@ public:
 private:
     void refreshApproachInfo();
     void refreshActiveLanes();
+    void refreshDataConfig();
     void refreshDateTime();
     bool refreshSensorConfig();
     void refreshSpeedBins();
     bool validateIntervalDataSetup();
+
+    QSerialPort *port;
+    QThread *serialThread;
+    SerialWorker *serialWorker;
+    Ui::MainWindow *ui;
 
 private slots:
     void on_refreshComPorts_clicked();
@@ -82,12 +95,14 @@ private slots:
 
     void on_refreshClassConfig_clicked();
 
-    void on_writeDataSetup_clicked();
+    QString getNewSensorData();
 
-private:
-    Ui::MainWindow *ui;
-    QSerialPort *port;
-    QThread *serialThread;
+
+
+
+    void on_writeDataSetup_clicked();
+    void on_refreshSensorConfig_clicked();
+    void on_dataIntrvlRTD_valueChanged(int arg1);
 };
 
 #endif // MAINWINDOW_H

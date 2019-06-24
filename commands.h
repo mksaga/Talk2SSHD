@@ -7,6 +7,7 @@
 #include <QSerialPort>
 #include <QTime>
 #include "sensor_utils.h"
+#include "serialworker.h"
 
 void write_message_to_sensor(QSerialPort *port,
                              QByteArray *msg,
@@ -92,9 +93,13 @@ QByteArray getVarSizeIntervalDataByTimestamp(uint8_t *Crc8Table,
                                              uint16_t destId,
                                              uint8_t destSubnetId,
                                              uint8_t seqNumber,
-                                             uint16_t index,
                                              QDateTime dt,
                                              uint8_t singleNum = 0);
+void startRealTimeDataRetrieval(uint8_t reqType, uint8_t laneApprNum,
+                                uint8_t *Crc8Table,
+                                sensor_data_config *sd, uint16_t sensorId,
+                                uint16_t dataIntrvl,
+                                SerialWorker *sW, uint16_t *errBytes);
 
 float fixedPtToFloat(uint16_t t);
 uint16_t extract16BitFixedPt(QByteArray *arr, int locn);

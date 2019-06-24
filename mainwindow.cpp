@@ -18,11 +18,19 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    // Set up necessary data
-//    (void)Crc8Table;
-//    (void)sensorId;
-//    (void)memo;
-//    (void)errString;
+    // set up serial port (decl. in header file)
+    port = new QSerialPort();
+
+    serialWorker = new SerialWorker;
+    serialWorker->setSerialPortPtr(port);
+    serialThread = new QThread;
+    serialWorker->moveToThread(serialThread);
+
+    // delete worker once it's done
+    connect(serialThread, &QThread::finished, serialWorker, &QObject::deleteLater);
+
+    serialThread->start();
+
 
     // one-time CRC table generation
     SmCommsGenerateCrc8Table(Crc8Table, COMMS_CRC8_TABLE_LENGTH);
@@ -42,8 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
     appr = new approach[4];
 //    laneArr = new lane[10];
 
-    // set up serial port (decl. in header file)
-    port = new QSerialPort();
+
 
     // initialize list of serial port devices
     ui->comPortSelect->clear();
@@ -62,6 +69,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QString q = QString("<html><head/><body><p><span style=\" font-size:14pt; font-weight:600; color:#0055ff;\">%1</span></p></body></html>").arg(sensorId);
     ui->sensorId->setText(q);
 
+    // Enhances color of real-time data setup button
     QPushButton *button = ui->writeDataSetup;
     QPalette pal = button->palette();
     pal.setColor(QPalette::Button, QColor(Qt::blue));
@@ -77,22 +85,30 @@ MainWindow::~MainWindow()
     if (port->isOpen()) {
         port->close();
     }
-//    serialThread->exit();
-//    serialThread->wait();
+    serialThread->exit();
+    serialThread->wait();
 
     delete ui;
-
     delete port;
 
     // sensorConfig pointers
     delete[] appr;
-//    delete[] laneArr;
     delete lastReadConf;
-    delete lastWrittenConf;
     delete lastReadDataConf;
     delete lastReadDateTime;
+    delete lastWrittenConf;
 
-//    delete serialThread;
+    delete serialThread;
+}
+
+bool isEqual (float f1, float f2)
+{
+    float epsilon = 0.01;
+    if (f1 > f2) {
+        return (f1-f2) <= epsilon;
+    } else {
+        return (f2-f1) <= epsilon;
+    }
 }
 
 
@@ -119,7 +135,7 @@ void MainWindow::on_refreshComPorts_clicked()
 bool MainWindow::refreshSensorConfig()
 {
     memo = genReadMsg(Crc8Table, 0x2A, 0, sensorId);
-    write_message_to_sensor(port, &memo, &resp, Crc8Table, &errCode, 0x2A, 0);
+    serialWorker->writeMsgToSensor(&memo, &resp, Crc8Table, &errCode);
     if (resp.at(0) == 'E') {
         // error message
         QMessageBox::critical(this, "Talk2SSHD", "Connection to sensor "
@@ -127,6 +143,7 @@ bool MainWindow::refreshSensorConfig()
         return false;
     }
     parse_gen_conf_read_response(resp, lastReadConf, errString);
+    lastWrittenConf->serial = lastReadConf->serial;
     return true;
 }
 
@@ -175,6 +192,8 @@ void MainWindow::on_connectToCom_clicked()
                 ui->unitsMetric->setChecked(true);
                 ui->unitsEnglish->setChecked(false);
             }
+
+            refreshDataConfig();
         } else {
             ui->connectToCom->setEnabled(true);
             port->close();
@@ -243,17 +262,22 @@ void MainWindow::on_writeSensorConfig_clicked()
 
     memo = gen_config_write(Crc8Table, lastWrittenConf, sensorId);
 
-    write_message_to_sensor(port, &memo, &writeResp, Crc8Table, &errCode, 0x2A, 1);
+    serialWorker->writeMsgToSensor(&memo, &writeResp, Crc8Table, &errCode);
+    if (errCode == 0) { QMessageBox::information(this, "T2SSHD", "Success!"); }
     refreshSensorConfig();
 }
 
-
-void MainWindow::on_loadDataConf_clicked()
+void MainWindow::refreshDataConfig()
 {
+    if (!port->isOpen()) {
+        QMessageBox::critical(this, "T2SSHD", "Error: not connected to sensor");
+        return;
+    }
+    dataInfoRead = 1;
     memo = genReadMsg(Crc8Table, 0x03, 0, sensorId);
     write_message_to_sensor(port, &memo, &resp, Crc8Table, &errCode);
     parse_data_conf_read_response(&resp, lastReadDataConf, errString);
-    ui->dataInterval->setValue(lastReadDataConf->data_interval);
+    ui->dataIntervalEdit->setValue(lastReadDataConf->data_interval);
     switch(lastReadDataConf->interval_mode) {
         case 0:
             ui->dataConfStorageDisabled->setChecked(true);
@@ -315,7 +339,11 @@ void MainWindow::on_loadDataConf_clicked()
     } else {
         ui->uartLocalPushMode->setChecked(false);
     }
+}
 
+void MainWindow::on_loadDataConf_clicked()
+{
+    refreshDataConfig();
 }
 
 /**
@@ -444,6 +472,10 @@ void MainWindow::refreshDateTime()
     if (sensorClock->isActive()) {
         return;
     }
+    if (!port->isOpen()) {
+        QMessageBox::critical(this, "T2SSHD", "Error: not connected to sensor");
+        return;
+    }
     memo = genReadMsg(Crc8Table, 0x0E, 0, sensorId);
     write_message_to_sensor(port, &memo, &resp, Crc8Table, &errCode);
     parse_sensor_time_read_resp(&resp, errString, lastReadDateTime);
@@ -465,6 +497,10 @@ void MainWindow::refreshDateTime()
 
 void MainWindow::refreshActiveLanes()
 {
+    if (!port->isOpen()) {
+        QMessageBox::critical(this, "T2SSHD", "Error: not connected to sensor");
+        return;
+    }
     laneInfoRead = 1;
     memo = genReadMsg(Crc8Table, 0x27, 10, sensorId);
     write_message_to_sensor(port, &memo, &resp, Crc8Table, &errCode);
@@ -520,6 +556,10 @@ void MainWindow::refreshActiveLanes()
 
 void MainWindow::refreshSpeedBins()
 {
+    if (!port->isOpen()) {
+        QMessageBox::critical(this, "T2SSHD", "Error: not connected to sensor");
+        return;
+    }
     memo = genReadMsg(Crc8Table, 0x1D, 15, sensorId);
     write_message_to_sensor(port, &memo, &resp, Crc8Table, &errCode);
     parse_speed_bin_conf_read(&resp, &numSpeedBins, speedBins, errString);
@@ -535,10 +575,10 @@ void MainWindow::refreshSpeedBins()
         }
         speedBinLabels[r][0]->setText(q);
         QString q2;
-        if (*(speedBins + r) == 255) {
-             q2 = QString("%1 (remaining events)").arg(*(speedBins + r));
+        if (isEqual(*(speedBins + r), 255)) {
+             q2 = QString("%1 (all other events)").arg(static_cast<double>(*(speedBins+r)));
         } else {
-             q2 = QString("%1").arg(*(speedBins + r));
+             q2 = QString("%1").arg(static_cast<double>(*(speedBins + r)));
         }
         speedBinLabels[r][1]->setText(q2);
         speedBinLabels[r][1]->setAlignment(Qt::AlignRight);
@@ -651,6 +691,10 @@ void MainWindow::on_confTabs_tabBarClicked(int index)
 
 void MainWindow::refreshApproachInfo()
 {
+    if (!port->isOpen()) {
+        QMessageBox::critical(this, "T2SSHD", "Error: not connected to sensor");
+        return;
+    }
     approachInfoRead = 1;
     memo = genReadMsg(Crc8Table, 0x28, 4, sensorId);
     write_message_to_sensor(port, &memo, &resp, Crc8Table, &errCode);
@@ -689,6 +733,10 @@ void MainWindow::on_readApproachConfBtn_clicked()
 
 void MainWindow::on_refreshClassConfig_clicked()
 {
+    if (!port->isOpen()) {
+        QMessageBox::critical(this, "T2SSHD", "Error: not connected to sensor");
+        return;
+    }
     memo = genReadMsg(Crc8Table, 0x13, 0, sensorId);
     write_message_to_sensor(port, &memo, &resp, Crc8Table, &errCode);
     parse_classif_read_resp(&resp, classBounds, &numClasses, errString);
@@ -708,13 +756,17 @@ void MainWindow::on_refreshClassConfig_clicked()
 
 bool MainWindow::validateIntervalDataSetup()
 {
+    if (!port->isOpen()) {
+        QMessageBox::critical(this, "T2SSHD", "Error: not connected to sensor");
+        return false;
+    }
     QString q;
     bool isNum = false;
     int x;
     if (ui->dCSingleApprRadio->isChecked()) {
         q = ui->dCSingleApprNum->text();
         x = q.toInt(&isNum);
-        if (isNum) {
+        if (isNum && (x<4 || x == 0xFF)) {
             if (approachInfoRead == 1) {
                 if (x <= numApproaches) {
                     // validate time input
@@ -729,13 +781,13 @@ bool MainWindow::validateIntervalDataSetup()
                 return false;
             }
         } else {
-            QMessageBox::critical(this, "Talk2SSHD", "Approach number must be a number greater than 0.");
+            QMessageBox::critical(this, "Talk2SSHD", "Approach number must be a number 1-4.");
             return false;
         }
     } else if (ui->dCSingleLaneRadio->isChecked()) {
         q = ui->dCSingleLaneNum->text();
         x = q.toInt(&isNum);
-        if (isNum) {
+        if (isNum && (x<10 || x == 0xFF)) {
             if (laneInfoRead == 1) {
                 if (x <= numLanes) {
                     // validate time input
@@ -750,9 +802,12 @@ bool MainWindow::validateIntervalDataSetup()
                 return false;
             }
         } else {
-            QMessageBox::critical(this, "Talk2SSHD", "Lane number must be a number greater than 0.");
+            QMessageBox::critical(this, "Talk2SSHD", "Lane number must be a number 1-10.");
             return false;
         }
+    } else if (!ui->dCGetAllRadio->isChecked()) {
+        QMessageBox::critical(this, "Talk2SSHD", "Choose a data type.");
+        return false;
     }
     // validate timestamp
     QDateTime now = QDateTime::currentDateTime();
@@ -766,11 +821,80 @@ bool MainWindow::validateIntervalDataSetup()
     }
 }
 
+QString MainWindow::getNewSensorData()
+{
+    QString q;
+
+    // set up command
+
+
+    return q;
+}
+
 void MainWindow::on_writeDataSetup_clicked()
 {
     if (validateIntervalDataSetup()) {
-        printf("True!\n");
+        int reqType = 3;
+        // y : the lane/approach number for individual lane or appr
+        int y = 4;
+        bool isNum = false;
+
+        // reqest type for single lane is 1, single appr is 2, all is 3
+        if (ui->dCSingleLaneRadio->isChecked()) {
+            reqType = 1;
+            y = ui->dCSingleLaneNum->text().toInt(&isNum);
+        } else if (ui->dCSingleApprRadio->isChecked()) {
+            reqType = 2;
+            y = ui->dCSingleApprNum->text().toInt(&isNum);
+        }
+
+        QString txt;
+        QString tmp;
+        if (reqType == 1) {
+            if (y==0xFF) {
+                tmp = QString("Get All Lanes");
+            } else {
+                tmp = QString("Get Single Lane (%1)").arg(y+1);
+            }
+        } else if (reqType == 2) {
+            if (y==0xFF) {
+                tmp = QString("Get All Approaches");
+            } else {
+                tmp = QString("Get Single Approach (%1)").arg(y+1);
+            }
+        }
+
+        QMessageBox b;
+        txt.append(tmp);
+        tmp = QString("\nData Interval: %1 seconds\n").arg(dataInterval);
+        txt.append(tmp);
+        b.setText("Double check data retrieval parameters:");
+        b.setInformativeText(txt);
+        b.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+        b.setDefaultButton(QMessageBox::Ok);
+        int ret = b.exec();
+        if (ret == QMessageBox::Ok) {
+            serialWorker->startRealTimeDataRetrieval(reqType, y, Crc8Table,
+                                                     lastReadDataConf,
+                                                     sensorId, dataInterval,
+                                                     numLanes, numApproaches,
+                                                     &errCode);
+        }
     } else {
         printf("Nope!\n");
     }
+}
+
+void MainWindow::on_refreshSensorConfig_clicked()
+{
+    refreshSensorConfig();
+}
+
+void MainWindow::on_dataIntrvlRTD_valueChanged(int arg1)
+{
+    if (arg1 > 0xFFFF) {
+        QMessageBox::critical(this, "T2SSHD", "Error: max data interval is 65535 seconds");
+    }
+    dataInterval = static_cast<uint16_t>(arg1 & 0x0000FFFF);
+    lastReadDataConf->data_interval = dataInterval;
 }

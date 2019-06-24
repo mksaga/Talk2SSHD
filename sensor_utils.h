@@ -6,8 +6,8 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include <vector>
 #include <QByteArray>
+#include <QDateTime>
 #include <QString>
 
 using namespace std;
@@ -87,6 +87,17 @@ struct lane {
         description = q;
         direction = c;
     }
+};
+
+struct realTimeDataNibble {
+    QDateTime dateTime;
+    uint16_t intervalDuration;
+    uint32_t avgSpeed;
+    uint32_t volume;
+    uint16_t avgOccupancy;
+    uint32_t eightyFifthPctlSpeed;
+    uint32_t headway;
+    uint32_t gap;
 };
 
 void SmCommsGenerateCrc8Table(uint8_t *crc_table, int length);

@@ -3,6 +3,8 @@
 #include "commands.h"
 #include "sensor_utils.h"
 
+#include <QTimer>
+
 using namespace std;
 const char zero = 0;
 
@@ -70,7 +72,7 @@ void write_message_to_sensor(QSerialPort *port, QByteArray *msg,
 
     // wait for data to finish writing
     if (port->waitForBytesWritten(waitTimeout)) {
-        printf("written\n");
+//        printf("written\n");
 
         // is there *some* new data ready?
         if (port->waitForReadyRead(waitTimeout)) {
@@ -84,7 +86,7 @@ void write_message_to_sensor(QSerialPort *port, QByteArray *msg,
             head = port->read(10);
             dataExpected = head.at(9);
             dataExpected &= 0x00FF;
-            printf("payload size: %02X\n", dataExpected);
+//            printf("payload size: %02X\n", dataExpected);
 
             // dataExpected = body size (not including CRCs)
             while (port->bytesAvailable() < dataExpected + 2) {
@@ -1749,7 +1751,6 @@ QByteArray getVarSizeIntervalDataByTimestamp(uint8_t *Crc8Table,
                                              uint16_t destId,
                                              uint8_t destSubnetId,
                                              uint8_t seqNumber,
-                                             uint16_t index,
                                              QDateTime dt,
                                              uint8_t singleNum)
 {
@@ -1778,7 +1779,7 @@ QByteArray getVarSizeIntervalDataByTimestamp(uint8_t *Crc8Table,
     msg.append(seqNumber);
 
     // payload size (1)
-    msg.append(7);
+    msg.append(0x0C);
 
     // header CRC (1)
     unsigned char crc = SmCommsComputeCrc8(Crc8Table,
@@ -1795,13 +1796,6 @@ QByteArray getVarSizeIntervalDataByTimestamp(uint8_t *Crc8Table,
 
     // msg type (1, read)
     msg.append(zero);
-
-    // index (3)
-    msg.append(zero);
-    uint8_t t1 = (index >> 8) & 0x00FF;
-    msg.append(t1);
-    t1 = static_cast<uint8_t>(index & 0x00FF);
-    msg.append(t1);
 
     // date (4)
     int yr =  dt.date().year();
@@ -1864,9 +1858,36 @@ QByteArray getVarSizeIntervalDataByTimestamp(uint8_t *Crc8Table,
     // lane/approach number (1)
     msg.append(singleNum);
 
-    QByteArray body = msg.right(19);
+    QByteArray body = msg.right(0x0C);
 
-    crc = SmCommsComputeCrc8(Crc8Table, &body, 19);
+    crc = SmCommsComputeCrc8(Crc8Table, &body, 0x0C);
     msg.append(crc);
     return msg;
+}
+
+void startRealTimeDataRetrieval(uint8_t reqType, uint8_t laneApprNum,
+                                uint8_t *Crc8Table,
+                                sensor_data_config *sDC,
+                                uint16_t sensorId,
+                                uint16_t dataInterval,
+                                SerialWorker *sW, uint16_t *errBytes)
+{
+
+    QByteArray msg;
+    QByteArray resp(128, '*');
+    QDateTime dt;
+
+    uint8_t seqNumber = 0;
+
+    *errBytes = 0;
+
+    // first, update data configuration
+    msg = gen_data_conf_write(Crc8Table, sDC, sensorId);
+    sW->writeMsgToSensor(&msg, &resp, Crc8Table, errBytes);
+
+    if (*errBytes == 0) {
+        dt = QDateTime::currentDateTimeUtc();
+        printf("Data interval: %u\n", dataInterval);
+        printf("Start DA RETreival!\n");
+    }
 }
