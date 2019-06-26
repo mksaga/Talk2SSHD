@@ -3,26 +3,32 @@
 
 #include <QDateTime>
 #include <QFile>
-#include <QSignalMapper>
 #include <QTextStream>
 #include <QTimer>
 
 SerialWorker::SerialWorker(QObject *parent) : QObject(parent)
 {
-    dataTimer = new QTimer();
-    dataFile = new QFile();
-    dataFile->setFileName("REALTIMEDATA.txt");
-    retrievedDataStream = new QTextStream(dataFile);
 }
 
-void SerialWorker::setTimerPtr(QTimer *t)
+SerialWorker::~SerialWorker()
 {
-    dataTimer = t;
+    delete retrievedDataStream;
+}
+
+void SerialWorker::setFilePtr(QFile *f)
+{
+    dataFile = f;
+    retrievedDataStream = new QTextStream(f);
 }
 
 void SerialWorker::setSerialPortPtr(QSerialPort *serialPtr)
 {
     serialPort = serialPtr;
+}
+
+void SerialWorker::setTimerPtr(QTimer *t)
+{
+    dataTimer = t;
 }
 
 void SerialWorker::writeMsgToSensor(QByteArray *msg,
@@ -98,12 +104,12 @@ void SerialWorker::startRealTimeDataRetrieval(uint8_t reqType, uint8_t lAN,
     *errBytes = 0;
 
     // first, update data configuration
-    message= gen_data_conf_write(Crc8Table, sDC, sensorId);
+    message = gen_data_conf_write(Crc8Table, sDC, sensorId);
     writeMsgToSensor(&message, &resp, Crc8Table, errBytes);
 
     // next, check for bins
     // length (classification)
-    message= genReadMsg(Crc8Table, 0x13, 0, sensorId);
+    message = genReadMsg(Crc8Table, 0x13, 0, sensorId);
     writeMsgToSensor(&message, &resp, Crc8Table, errBytes);
     if (resp.size() > 10) { numClasses = (resp.at(9) - 3) / 2; }
 
@@ -122,17 +128,32 @@ void SerialWorker::startRealTimeDataRetrieval(uint8_t reqType, uint8_t lAN,
         requestType = reqType;
         numLanes = nL;
         numApprs = nA;
-//        const int x = nL+nA;
-//        realTimeDataNibble realTimeDataVals[x];
 
-        dataFile->open(QIODevice::WriteOnly);
+        if (dataFile->exists()) {
+            printf("File exists.\n");
+            if (dataFile->isOpen()) {
+                printf("File is already open.\n");
+            } else if (dataFile->open(QIODevice::WriteOnly)) {
+                printf("File opened.\n");
+            } else {
+                printf("Couldn't open file.\n");
+                return;
+            }
+        } else {
+            printf("File does not exist.\n");
+        }
+
 //        QTextStream retrievedDataStream(dataFile);
 
         // set up header row of the data file
+        QString headerLine;
         QString spacer = "    ";
+        QString t;
 
         (*retrievedDataStream) << qSetFieldWidth(25) << center << "Datetime";
-        (*retrievedDataStream) << "Interval Duration" << spacer;
+        t = QString("%1").arg("Datetime", 25);
+        headerLine.append(t);
+        (*retrievedDataStream) << qSetFieldWidth(5) << "Interval Duration" << spacer;
         (*retrievedDataStream) << "Total # Lanes/Apprs" << spacer;
         (*retrievedDataStream) << "Avg Speed" << spacer;
         (*retrievedDataStream) << "Volume" << spacer;
@@ -140,11 +161,11 @@ void SerialWorker::startRealTimeDataRetrieval(uint8_t reqType, uint8_t lAN,
         (*retrievedDataStream) << "85th Pctle Speed" << spacer;
         (*retrievedDataStream) << "Headway (ms)" << spacer;
         (*retrievedDataStream) << "Gap (ms)" << spacer;
-        (*retrievedDataStream) << spacer;
 
         int i;
         for (i=0; i<numClasses; i++) {
-            (*retrievedDataStream) << "Length Bin " << i;
+            (*retrievedDataStream) << qSetFieldWidth(11) << "Length Bin "
+                                   << qSetFieldWidth(2) << i;
         }
         (*retrievedDataStream) << spacer;
         for (i=0; i<numSpeedBins; i++) {
@@ -156,12 +177,11 @@ void SerialWorker::startRealTimeDataRetrieval(uint8_t reqType, uint8_t lAN,
         message = getVarSizeIntervalDataByTimestamp(Crc8Table, reqType, sensorId,
                                                 0, 0, dt, laneApprNum);
 
-        connect(dataTimer, SIGNAL(timeout()),
-                this, SLOT(getNewSensorData()));
+        connect(dataTimer, &QTimer::timeout, this, &SerialWorker::getNewSensorData,
+                Qt::DirectConnection);
 
-//        connect(dataTimer, &QTimer::timeout, this, &SerialWorker::getNewSensorData);
         dataTimer->start(dataInterval * 1000);
-
+        emit fileReadyForRead(headerLine);
     }
 }
 
@@ -171,11 +191,6 @@ void SerialWorker::stopRealTimeDataRetrieval()
     if (dataTimer->isActive()) {
         dataTimer->stop();
     }
-}
-
-void SerialWorker::setFilePtr(QFile *f)
-{
-    dataFile = f;
 }
 
 void SerialWorker::getNewSensorData()
@@ -229,6 +244,8 @@ void SerialWorker::getNewSensorData()
     uint32_t headway;
     uint32_t gap;
 
+    QString newDataLine;
+
     serialPort->clear(QSerialPort::Input);
     serialPort->write(message);
     while (!serialPort->waitForBytesWritten(waitTimeout));
@@ -263,10 +280,13 @@ void SerialWorker::getNewSensorData()
                     }
                 }
             }
-            if (errorCode == 0x000F) { intervalNotPresent = true; break; }
-
-            // process response array
-//            realTimeDataNibble *dN = dataTable + i;
+            if (errorCode == 0x000F) {
+                intervalNotPresent = true;
+                i = loopLimit;
+                newDataLine = "No New Data";
+                emit fileReadyForRead(newDataLine);
+                break;
+            } else {
 
             // extract date and time
 
@@ -324,6 +344,9 @@ void SerialWorker::getNewSensorData()
 
             (*retrievedDataStream).setPadChar('0');
             (*retrievedDataStream) << qSetFieldWidth(2) << month << "/" << day << "/" << qSetFieldWidth(4) << year << " " << qSetFieldWidth(2) << hrs << ":" << mins << ":" << secs << " ";
+            QChar z = QChar(48);
+            QString q = QString("%1/%2/%3 %4:%5:%6").arg(month, 2, 10, z).arg(day, 2, 10, z).arg(year, 4).arg(hrs, 2, 10, z).arg(mins, 2, 10, z).arg(secs, 2, 10, z);
+            newDataLine.append(q);
 
             tmpHi = resp.at(locn); locn++;
             tmpLo = resp.at(locn); locn++;
@@ -332,16 +355,24 @@ void SerialWorker::getNewSensorData()
             intervalDuration |= ( (static_cast<uint16_t>(tmpLo)) & 0x00FF);
 
             (*retrievedDataStream) << qSetFieldWidth(6) << intervalDuration;
+            q = QString("%1").arg(intervalDuration, 6);
+            newDataLine.append(q);
 
             // num lanes & approaches configured, respectively
             (*retrievedDataStream)  << qSetFieldWidth(2) << resp.at(locn);
+            q = QString("%1").arg(resp.at(locn), 2);
+            newDataLine.append(q);
             locn++;
             (*retrievedDataStream) << resp.at(locn);
+            q = QString("%1").arg(resp.at(locn), 2);
+            newDataLine.append(q);
             locn++;
 
             // avg speed
             avgSpeed = doubleFrom24BitFixedPt(&resp, locn);
             (*retrievedDataStream) << qSetFieldWidth(6) << avgSpeed;
+            q = QString("%1").arg(avgSpeed, 6);
+            newDataLine.append(q);
             locn += 3;
 
             // volume (3 bytes)
@@ -353,13 +384,19 @@ void SerialWorker::getNewSensorData()
             locn++;
 
             (*retrievedDataStream) << qSetFieldWidth(6) << volume;
+            q = QString("%1").arg(volume, 6);
+            newDataLine.append(q);
 
             avgOccupancy = static_cast<double>(fixedPtToFloat(extract16BitFixedPt(&resp, locn)));
             locn += 2;
             (*retrievedDataStream) << qSetFieldWidth(5) << avgOccupancy;
+            q = QString("%1").arg(avgOccupancy, 5);
+            newDataLine.append(q);
 
             eightyFifthPctlSpeed = doubleFrom24BitFixedPt(&resp, locn);
             (*retrievedDataStream) << qSetFieldWidth(4) << eightyFifthPctlSpeed;
+            q = QString("%1").arg(eightyFifthPctlSpeed, 4);
+            newDataLine.append(q);
             locn += 3;
 
             // headway (3 bytes)
@@ -371,6 +408,8 @@ void SerialWorker::getNewSensorData()
             locn++;
 
             (*retrievedDataStream) << headway;
+            q = QString("%1").arg(headway);
+            newDataLine.append(q);
 
             // gap (3 bytes)
             gap = static_cast<uint32_t>( (resp.at(locn) << 24) & 0xFF0000);
@@ -381,6 +420,8 @@ void SerialWorker::getNewSensorData()
             locn++;
 
             (*retrievedDataStream) << gap;
+            q = QString("%1").arg(gap);
+            newDataLine.append(q);
 
             if (locn == dataExpected + 10) {
                 return;
@@ -401,10 +442,16 @@ void SerialWorker::getNewSensorData()
                         locn++;
 
                         (*retrievedDataStream) << count;
+                        q = QString("%1").arg(count);
+                        newDataLine.append(q);
                     }
                 }
             }
 
+
+            (*retrievedDataStream) << "\n\n";
+            newDataLine.append("\n\n");
+            emit fileReadyForRead(newDataLine);
         }
-    (*retrievedDataStream) << "\n\n";
+    }
 }

@@ -1114,16 +1114,16 @@
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="layoutWidget">
+         <widget class="QWidget" name="">
           <property name="geometry">
            <rect>
-            <x>470</x>
-            <y>20</y>
-            <width>331</width>
-            <height>47</height>
+            <x>471</x>
+            <y>21</y>
+            <width>341</width>
+            <height>25</height>
            </rect>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_3">
+          <layout class="QHBoxLayout" name="horizontalLayout_6">
            <item>
             <widget class="QLabel" name="label_22">
              <property name="text">
@@ -1136,30 +1136,41 @@
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="layoutWidget">
+         <widget class="QWidget" name="">
           <property name="geometry">
            <rect>
             <x>470</x>
-            <y>70</y>
-            <width>331</width>
-            <height>27</height>
+            <y>50</y>
+            <width>187</width>
+            <height>25</height>
            </rect>
           </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_4">
-             <item>
-              <widget class="QLabel" name="label_23">
-               <property name="text">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Data Interval (secs):&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QSpinBox" name="dataIntrvlRTD"/>
-             </item>
-            </layout>
+            <widget class="QLabel" name="label_23">
+             <property name="text">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Data Interval (secs):&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+            </widget>
            </item>
+           <item>
+            <widget class="QSpinBox" name="dataIntrvlRTD"/>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="">
+          <property name="geometry">
+           <rect>
+            <x>670</x>
+            <y>50</y>
+            <width>141</width>
+            <height>51</height>
+           </rect>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+           <property name="spacing">
+            <number>2</number>
+           </property>
            <item>
             <widget class="QPushButton" name="writeDataSetup">
              <property name="styleSheet">
@@ -1173,6 +1184,19 @@
              </property>
             </widget>
            </item>
+           <item>
+            <widget class="QPushButton" name="stopDataRetrieval">
+             <property name="styleSheet">
+              <string notr="true">QPushButton {
+	color: rgb(255, 255, 255);
+    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1,   stop:0 rgba(200, 20, 20, 255), stop:1 rgba(255, 10, 10, 255));
+}</string>
+             </property>
+             <property name="text">
+              <string>Stop Retrieving Data</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </widget>
         </widget>
@@ -1182,33 +1206,14 @@
          <property name="title">
           <string>View Real-Time Data</string>
          </property>
-         <widget class="QTextEdit" name="textEdit">
+         <widget class="QPlainTextEdit" name="dataView">
           <property name="geometry">
            <rect>
             <x>10</x>
-            <y>30</y>
-            <width>801</width>
-            <height>551</height>
+            <y>20</y>
+            <width>781</width>
+            <height>591</height>
            </rect>
-          </property>
-         </widget>
-         <widget class="QPushButton" name="stopDataRetrieval">
-          <property name="geometry">
-           <rect>
-            <x>670</x>
-            <y>40</y>
-            <width>136</width>
-            <height>23</height>
-           </rect>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">QPushButton {
-	color: rgb(255, 255, 255);
-    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1,   stop:0 rgba(200, 20, 20, 255), stop:1 rgba(255, 10, 10, 255));
-}</string>
-          </property>
-          <property name="text">
-           <string>Stop Retrieving Data</string>
           </property>
          </widget>
         </widget>

@@ -7,6 +7,7 @@
 #include <QByteArray>
 #include <QDateTime>
 #include <QFile>
+#include <QFileInfo>
 #include <QMessageBox>
 #include <QSerialPort>
 #include <QSerialPortInfo>
@@ -17,26 +18,31 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    QString q;
 
     // set up serial port (decl. in header file)
     port = new QSerialPort();
-//    file = new QFile("realTimeData.txt");
+    QTimer *tickTock = new QTimer();
+
+    file = new QFile("RTDATA.txt");
+    file->open(QIODevice::WriteOnly);
+
     serialWorker = new SerialWorker;
     serialWorker->setSerialPortPtr(port);
-//    serialWorker->setFilePtr(file);
+    serialWorker->setFilePtr(file);
 
-//    QTimer *getDataTimer = new QTimer();
+//    serialThread = new QThread;
 
-    serialThread = new QThread;
-    serialWorker->moveToThread(serialThread);
-//    getDataTimer->moveToThread(serialThread);
-//    serialWorker->setTimerPtr(getDataTimer);
+//    connect(tickTock,       SIGNAL(timeout()),
+//            serialWorker,   SLOT(getNewSensorData()));
+
+    serialWorker->setTimerPtr(tickTock);
 
     // delete worker once it's done
-    connect(serialThread, &QThread::finished, serialWorker, &QObject::deleteLater);
+//    connect(serialThread, &QThread::finished, serialWorker, &QObject::deleteLater);
 
-    serialThread->start();
-
+    // once data has finished writing, refresh the view
+    connect(serialWorker, &SerialWorker::fileReadyForRead, this, &MainWindow::updateDataView);
 
     // one-time CRC table generation
     SmCommsGenerateCrc8Table(Crc8Table, COMMS_CRC8_TABLE_LENGTH);
@@ -54,9 +60,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // memory allocations assume worst-case of max # approaches and lanes
     appr = new approach[4];
-//    laneArr = new lane[10];
-
-
 
     // initialize list of serial port devices
     ui->comPortSelect->clear();
@@ -72,18 +75,19 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     // set sensorID
-    QString q = QString("<html><head/><body><p><span style=\" font-size:14pt; font-weight:600; color:#0055ff;\">%1</span></p></body></html>").arg(sensorId);
+    q = QString("<html><head/><body><p><span style=\" font-size:14pt; font-weight:600; color:#0055ff;\">%1</span></p></body></html>").arg(sensorId);
     ui->sensorId->setText(q);
 
     // Enhances color of real-time data setup button
-    QPushButton *button = ui->writeDataSetup;
-    QPalette pal = button->palette();
-    pal.setColor(QPalette::Button, QColor(Qt::blue));
-    button->setAutoFillBackground(true);
-    button->setPalette(pal);
-    button->update();
+//    QPushButton *button = ui->writeDataSetup;
+//    QPalette pal = button->palette();
+//    pal.setColor(QPalette::Button, QColor(Qt::blue));
+//    button->setAutoFillBackground(true);
+//    button->setPalette(pal);
+//    button->update();
 
     ui->dCDateTimeSelect->setCalendarPopup(true);
+    ui->dCDateTimeSelect->setDateTime(QDateTime::currentDateTime());
 }
 
 MainWindow::~MainWindow()
@@ -91,8 +95,9 @@ MainWindow::~MainWindow()
     if (port->isOpen()) {
         port->close();
     }
-    serialThread->exit();
-    serialThread->wait();
+
+//    serialThread->exit();
+//    serialThread->wait();
 
     delete file;
     delete ui;
@@ -105,7 +110,7 @@ MainWindow::~MainWindow()
     delete lastReadDateTime;
     delete lastWrittenConf;
 
-    delete serialThread;
+//    delete serialThread;
 }
 
 bool isEqual (float f1, float f2)
@@ -201,6 +206,8 @@ void MainWindow::on_connectToCom_clicked()
             }
 
             refreshDataConfig();
+            refreshActiveLanes();
+            refreshApproachInfo();
         } else {
             ui->connectToCom->setEnabled(true);
             port->close();
@@ -828,16 +835,6 @@ bool MainWindow::validateIntervalDataSetup()
     }
 }
 
-QString MainWindow::getNewSensorData()
-{
-    QString q;
-
-    // set up command
-
-
-    return q;
-}
-
 void MainWindow::on_writeDataSetup_clicked()
 {
     if (validateIntervalDataSetup()) {
@@ -909,4 +906,9 @@ void MainWindow::on_dataIntrvlRTD_valueChanged(int arg1)
 void MainWindow::on_stopDataRetrieval_clicked()
 {
     serialWorker->stopRealTimeDataRetrieval();
+}
+
+void MainWindow::updateDataView(QString dataLine)
+{
+    ui->dataView->appendPlainText(dataLine);
 }

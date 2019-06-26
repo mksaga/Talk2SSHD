@@ -26,9 +26,11 @@ class MainWindow : public QMainWindow
     QString errString;
     uint16_t errCode;
     QTimer *sensorClock;
-    int numApproaches;
 
+
+    int numApproaches;
     int numLanes;
+
     double classBounds[8] = {0};
     lane laneArr[10];
 
@@ -96,10 +98,7 @@ private slots:
 
     void on_refreshClassConfig_clicked();
 
-    QString getNewSensorData();
-
-
-
+    void updateDataView(QString dataLine);
 
     void on_writeDataSetup_clicked();
     void on_refreshSensorConfig_clicked();
