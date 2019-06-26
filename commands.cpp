@@ -1133,6 +1133,30 @@ float fixedPtToFloat(uint16_t t)
     return (static_cast<float>(tI) + tD);
 }
 
+double doubleFrom24BitFixedPt(QByteArray *arr, int i)
+{
+    if (i+2 < arr->size()) {
+        char validSpeed = ((arr->at(i)) & 0x80) >> 7;
+        validSpeed &= 0x01;
+        if (validSpeed) {
+            int16_t intPart;
+            uint8_t t1 = (arr->at(i)) & 0x7F;
+            uint8_t t2 = (arr->at(i+1));
+            uint16_t a = t1 << 8;
+            uint16_t b = t2 & 0x00FF;
+            intPart = a | b;
+
+            t1 = (arr->at(i+2));
+            double decPart = t1 / 256.0;
+            return (intPart + decPart);
+        } else {
+            return 3.125;
+        }
+    } else {
+        return 0.0;
+    }
+}
+
 /**
  * @brief parse_classif_read_resp: Parses sensor response to a Classification Configuration Read message.
  * @param response: pointer to byte array of sensor response

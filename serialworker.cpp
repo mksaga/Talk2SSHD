@@ -3,12 +3,21 @@
 
 #include <QDateTime>
 #include <QFile>
+#include <QSignalMapper>
 #include <QTextStream>
 #include <QTimer>
 
 SerialWorker::SerialWorker(QObject *parent) : QObject(parent)
 {
+    dataTimer = new QTimer();
+    dataFile = new QFile();
+    dataFile->setFileName("REALTIMEDATA.txt");
+    retrievedDataStream = new QTextStream(dataFile);
+}
 
+void SerialWorker::setTimerPtr(QTimer *t)
+{
+    dataTimer = t;
 }
 
 void SerialWorker::setSerialPortPtr(QSerialPort *serialPtr)
@@ -74,41 +83,37 @@ void SerialWorker::writeMsgToSensor(QByteArray *msg,
     }
 }
 
-void SerialWorker::startRealTimeDataRetrieval(uint8_t reqType, uint8_t laneApprNum,
+void SerialWorker::startRealTimeDataRetrieval(uint8_t reqType, uint8_t lAN,
                                 uint8_t *Crc8Table,
                                 sensor_data_config *sDC,
                                 uint16_t sensorId,
                                 uint16_t dataInterval, uint8_t nL, uint8_t nA,
                                 uint16_t *errBytes)
 {
-    QByteArray msg;
+//    QByteArray message= *message;
     QByteArray resp(128, '*');
     QDateTime dt;
+    laneApprNum = lAN;
 
     *errBytes = 0;
 
     // first, update data configuration
-    msg = gen_data_conf_write(Crc8Table, sDC, sensorId);
-    writeMsgToSensor(&msg, &resp, Crc8Table, errBytes);
+    message= gen_data_conf_write(Crc8Table, sDC, sensorId);
+    writeMsgToSensor(&message, &resp, Crc8Table, errBytes);
 
-    // next, check for length, speed, and direction bins
-
+    // next, check for bins
     // length (classification)
-    msg = genReadMsg(Crc8Table, 0x13, 0, sensorId);
-    writeMsgToSensor(&msg, &resp, Crc8Table, errBytes);
+    message= genReadMsg(Crc8Table, 0x13, 0, sensorId);
+    writeMsgToSensor(&message, &resp, Crc8Table, errBytes);
     if (resp.size() > 10) { numClasses = (resp.at(9) - 3) / 2; }
 
     // speed bins
-    msg = genReadMsg(Crc8Table, 0x1D, 0, sensorId);
-    writeMsgToSensor(&msg, &resp, Crc8Table, errBytes);
+    message= genReadMsg(Crc8Table, 0x1D, 0, sensorId);
+    writeMsgToSensor(&message, &resp, Crc8Table, errBytes);
     if (resp.size() > 13) {
         numSpeedBins = (resp.at(9) - 3) / 2;
         numSpeedBins = resp.at(12);
     }
-
-    // direction bins
-    // to be completed (awaiting Wavetronix response)
-    numDirectionBins = 0;
 
     if (*errBytes == 0) {
         dt = QDateTime::currentDateTimeUtc();
@@ -117,23 +122,66 @@ void SerialWorker::startRealTimeDataRetrieval(uint8_t reqType, uint8_t laneApprN
         requestType = reqType;
         numLanes = nL;
         numApprs = nA;
-        const int x = nL+nA;
-        realTimeDataNibble realTimeDataVals[x];
+//        const int x = nL+nA;
+//        realTimeDataNibble realTimeDataVals[x];
 
-        msg = getVarSizeIntervalDataByTimestamp(Crc8Table, reqType, sensorId,
+        dataFile->open(QIODevice::WriteOnly);
+//        QTextStream retrievedDataStream(dataFile);
+
+        // set up header row of the data file
+        QString spacer = "    ";
+
+        (*retrievedDataStream) << qSetFieldWidth(25) << center << "Datetime";
+        (*retrievedDataStream) << "Interval Duration" << spacer;
+        (*retrievedDataStream) << "Total # Lanes/Apprs" << spacer;
+        (*retrievedDataStream) << "Avg Speed" << spacer;
+        (*retrievedDataStream) << "Volume" << spacer;
+        (*retrievedDataStream) << "Avg Occupancy" << spacer;
+        (*retrievedDataStream) << "85th Pctle Speed" << spacer;
+        (*retrievedDataStream) << "Headway (ms)" << spacer;
+        (*retrievedDataStream) << "Gap (ms)" << spacer;
+        (*retrievedDataStream) << spacer;
+
+        int i;
+        for (i=0; i<numClasses; i++) {
+            (*retrievedDataStream) << "Length Bin " << i;
+        }
+        (*retrievedDataStream) << spacer;
+        for (i=0; i<numSpeedBins; i++) {
+            (*retrievedDataStream) << "Speed Bin " << i;
+        }
+        (*retrievedDataStream) << "\n";
+
+
+        message = getVarSizeIntervalDataByTimestamp(Crc8Table, reqType, sensorId,
                                                 0, 0, dt, laneApprNum);
-        QTimer *pollNewData = new QTimer(this);
-        connect(pollNewData, SIGNAL(timeout()),
-                this, SLOT(getNewSensorData(&msg, laneApprNum, realTimeDataVals)));
-        pollNewData->start(dataInterval * 1000);
+
+        connect(dataTimer, SIGNAL(timeout()),
+                this, SLOT(getNewSensorData()));
+
+//        connect(dataTimer, &QTimer::timeout, this, &SerialWorker::getNewSensorData);
+        dataTimer->start(dataInterval * 1000);
 
     }
 }
 
-void SerialWorker::getNewSensorData(QByteArray *msg, uint8_t laneApprNum,
-                                    realTimeDataNibble *dataTable)
+void SerialWorker::stopRealTimeDataRetrieval()
+{
+    dataFile->close();
+    if (dataTimer->isActive()) {
+        dataTimer->stop();
+    }
+}
+
+void SerialWorker::setFilePtr(QFile *f)
+{
+    dataFile = f;
+}
+
+void SerialWorker::getNewSensorData()
 {
     uint8_t seqNumber = 0;
+    (void)seqNumber;
     uint16_t errorCode = 0x0000;
     QByteArray resp(128, '*');
     QDateTime dt;
@@ -161,8 +209,28 @@ void SerialWorker::getNewSensorData(QByteArray *msg, uint8_t laneApprNum,
     int totalBinCount = numClasses + numSpeedBins + numDirectionBins;
     (void)totalBinCount;
 
+    int packetNumber;
+    (void)packetNumber;
+    uint8_t day;
+    uint8_t month;
+    uint16_t year;
+    uint8_t tmpHi;
+    uint8_t tmpLo;
+    uint8_t hrs;
+    uint8_t mins;
+    uint8_t secs;
+    uint16_t ms;
+    (void)ms;
+    uint16_t intervalDuration;
+    double avgSpeed;
+    uint32_t volume;
+    double avgOccupancy;
+    double eightyFifthPctlSpeed;
+    uint32_t headway;
+    uint32_t gap;
+
     serialPort->clear(QSerialPort::Input);
-    serialPort->write(*msg);
+    serialPort->write(message);
     while (!serialPort->waitForBytesWritten(waitTimeout));
 
     for (i=0; ( (i<loopLimit) && (!intervalNotPresent) ); i++) {
@@ -198,11 +266,145 @@ void SerialWorker::getNewSensorData(QByteArray *msg, uint8_t laneApprNum,
             if (errorCode == 0x000F) { intervalNotPresent = true; break; }
 
             // process response array
-            realTimeDataNibble *dN = dataTable + i;
+//            realTimeDataNibble *dN = dataTable + i;
 
             // extract date and time
 
+            if (resp.size() < 23) { return; }
 
+            // sensor date starts at byte indexed 14
+
+            int indexNumPos = 14;
+            int locn = indexNumPos + 3;
+
+
+            // lane/approach number: byte 17
+            packetNumber = resp.at(locn);
+            locn++;
+
+            // extract year
+            uint8_t y1 = resp.at(locn); locn++;
+            uint8_t y2 = resp.at(locn); locn++;
+
+
+            // fill up lower 8 bits
+            if (y1 & 0x1) {
+                // bit @ index 7 should be 1
+                tmpLo = (y2 >> 1) | 0x80;
+            } else {
+                // bit @ index 7 should be 0
+                tmpLo = (y2 >> 1) & 0x7F;
+            }
+            // upper 8 bits: index 1-5 from upper byte
+            tmpHi = (y1 & 0x1E) >> 1;
+            year = (tmpHi << 8) | ((tmpLo & 0x00FF));
+
+            // get lower 3 bits of month
+            month = (resp.at(locn)) >> 5; locn++;
+            if (y2 & 0x1) {
+                // MSB is 1
+                month |= 0x8;
+            } else {
+                month &= 0x7;
+            }
+
+            // extract day: lower 5 bits
+            day = (resp.at(locn)) & 0x1F; locn++;
+
+            tmpLo = (resp.at(19) & 0xC0) >> 6;
+            tmpHi = (resp.at(18) & 0x07) << 2;
+            hrs = (tmpHi | tmpLo);
+
+            mins = (resp.at(19) & 0x3F);
+            secs = (resp.at(20) & 0xFC) >> 2;
+
+            // milliseconds
+            tmpHi = (resp.at(20) & 0x3);
+            ms = (tmpHi << 8) | (resp.at(21) & 0x00FF);
+
+            (*retrievedDataStream).setPadChar('0');
+            (*retrievedDataStream) << qSetFieldWidth(2) << month << "/" << day << "/" << qSetFieldWidth(4) << year << " " << qSetFieldWidth(2) << hrs << ":" << mins << ":" << secs << " ";
+
+            tmpHi = resp.at(locn); locn++;
+            tmpLo = resp.at(locn); locn++;
+
+            intervalDuration = (static_cast<uint16_t>((tmpHi << 8) & 0xFF00));
+            intervalDuration |= ( (static_cast<uint16_t>(tmpLo)) & 0x00FF);
+
+            (*retrievedDataStream) << qSetFieldWidth(6) << intervalDuration;
+
+            // num lanes & approaches configured, respectively
+            (*retrievedDataStream)  << qSetFieldWidth(2) << resp.at(locn);
+            locn++;
+            (*retrievedDataStream) << resp.at(locn);
+            locn++;
+
+            // avg speed
+            avgSpeed = doubleFrom24BitFixedPt(&resp, locn);
+            (*retrievedDataStream) << qSetFieldWidth(6) << avgSpeed;
+            locn += 3;
+
+            // volume (3 bytes)
+            volume = static_cast<uint32_t>( (resp.at(locn) << 24) & 0xFF0000);
+            locn++;
+            volume |= static_cast<uint32_t>( (resp.at(locn) << 16) & 0x00FF00);
+            locn++;
+            volume |= static_cast<uint32_t>( (resp.at(locn) ) & 0x0000FF);
+            locn++;
+
+            (*retrievedDataStream) << qSetFieldWidth(6) << volume;
+
+            avgOccupancy = static_cast<double>(fixedPtToFloat(extract16BitFixedPt(&resp, locn)));
+            locn += 2;
+            (*retrievedDataStream) << qSetFieldWidth(5) << avgOccupancy;
+
+            eightyFifthPctlSpeed = doubleFrom24BitFixedPt(&resp, locn);
+            (*retrievedDataStream) << qSetFieldWidth(4) << eightyFifthPctlSpeed;
+            locn += 3;
+
+            // headway (3 bytes)
+            headway = static_cast<uint32_t>( (resp.at(locn) << 24) & 0xFF0000);
+            locn++;
+            headway |= static_cast<uint32_t>( (resp.at(locn) << 16) & 0x00FF00);
+            locn++;
+            headway |= static_cast<uint32_t>( (resp.at(locn) ) & 0x0000FF);
+            locn++;
+
+            (*retrievedDataStream) << headway;
+
+            // gap (3 bytes)
+            gap = static_cast<uint32_t>( (resp.at(locn) << 24) & 0xFF0000);
+            locn++;
+            gap |= static_cast<uint32_t>( (resp.at(locn) << 16) & 0x00FF00);
+            locn++;
+            gap |= static_cast<uint32_t>( (resp.at(locn) ) & 0x0000FF);
+            locn++;
+
+            (*retrievedDataStream) << gap;
+
+            if (locn == dataExpected + 10) {
+                return;
+            } else {
+                while (locn < dataExpected) {
+                    char binType = resp.at(locn);
+                    (void)binType;
+                    char numBins;
+                    locn++;
+                    numBins = resp.at(locn);
+                    for (int j=0; j<numBins; j++) {
+                        uint32_t count;
+                        count = static_cast<uint32_t>( (resp.at(locn) << 24) & 0xFF0000);
+                        locn++;
+                        count |= static_cast<uint32_t>( (resp.at(locn) << 16) & 0x00FF00);
+                        locn++;
+                        count |= static_cast<uint32_t>( (resp.at(locn) ) & 0x0000FF);
+                        locn++;
+
+                        (*retrievedDataStream) << count;
+                    }
+                }
+            }
 
         }
+    (*retrievedDataStream) << "\n\n";
 }

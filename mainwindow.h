@@ -69,6 +69,7 @@ private:
     void refreshSpeedBins();
     bool validateIntervalDataSetup();
 
+    QFile *file;
     QSerialPort *port;
     QThread *serialThread;
     SerialWorker *serialWorker;
@@ -103,6 +104,7 @@ private slots:
     void on_writeDataSetup_clicked();
     void on_refreshSensorConfig_clicked();
     void on_dataIntrvlRTD_valueChanged(int arg1);
+    void on_stopDataRetrieval_clicked();
 };
 
 #endif // MAINWINDOW_H

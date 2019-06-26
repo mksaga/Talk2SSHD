@@ -1,8 +1,11 @@
 #ifndef SERIALWORKER_H
 #define SERIALWORKER_H
 
+#include <QFile>
 #include <QObject>
 #include <QSerialPort>
+#include <QTextStream>
+#include <QTimer>
 
 
 #include <sensor_utils.h>
@@ -13,6 +16,7 @@ class SerialWorker : public QObject
 public:
     explicit SerialWorker(QObject *parent = nullptr);
     void setSerialPortPtr(QSerialPort*);
+    void setTimerPtr(QTimer *t);
     void writeMsgToSensor(QByteArray *msg, QByteArray *resp,
                           uint8_t *Crc8Table,
                           uint16_t *errorBytes);
@@ -24,15 +28,22 @@ public:
                                     uint8_t numLanes,
                                     uint8_t numApproaches,
                                     uint16_t *errBytes);
+    void setFilePtr(QFile*);
+    void stopRealTimeDataRetrieval();
 
 private:
-    QSerialPort *serialPort;
+    int numClasses;
+    int numDirectionBins;
+    int numSpeedBins;
+    uint8_t laneApprNum;
     uint8_t requestType;
     uint8_t numLanes;
     uint8_t numApprs;
-    int numClasses;
-    int numSpeedBins;
-    int numDirectionBins;
+    QByteArray message;
+    QFile *dataFile;
+    QSerialPort *serialPort;
+    QTextStream *retrievedDataStream;
+    QTimer *dataTimer;
 
 signals:
     void WorkerReady(const QString &result);
@@ -43,9 +54,7 @@ signals:
     void iVCCS_CMD_DLFILE(const double &precentage);
 
 public slots:
-    void ReceiveData(void);
-    void getNewSensorData(QByteArray *msg, uint8_t laneApprNum,
-                          realTimeDataNibble *table);
+    void getNewSensorData();
 };
 
 #endif // SERIALWORKER_H

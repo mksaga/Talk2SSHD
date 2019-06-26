@@ -6,11 +6,11 @@
 
 #include <QByteArray>
 #include <QDateTime>
+#include <QFile>
 #include <QMessageBox>
 #include <QSerialPort>
 #include <QSerialPortInfo>
 #include <QString>
-#include <QTableWidgetItem>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -20,11 +20,17 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // set up serial port (decl. in header file)
     port = new QSerialPort();
-
+//    file = new QFile("realTimeData.txt");
     serialWorker = new SerialWorker;
     serialWorker->setSerialPortPtr(port);
+//    serialWorker->setFilePtr(file);
+
+//    QTimer *getDataTimer = new QTimer();
+
     serialThread = new QThread;
     serialWorker->moveToThread(serialThread);
+//    getDataTimer->moveToThread(serialThread);
+//    serialWorker->setTimerPtr(getDataTimer);
 
     // delete worker once it's done
     connect(serialThread, &QThread::finished, serialWorker, &QObject::deleteLater);
@@ -88,6 +94,7 @@ MainWindow::~MainWindow()
     serialThread->exit();
     serialThread->wait();
 
+    delete file;
     delete ui;
     delete port;
 
@@ -897,4 +904,9 @@ void MainWindow::on_dataIntrvlRTD_valueChanged(int arg1)
     }
     dataInterval = static_cast<uint16_t>(arg1 & 0x0000FFFF);
     lastReadDataConf->data_interval = dataInterval;
+}
+
+void MainWindow::on_stopDataRetrieval_clicked()
+{
+    serialWorker->stopRealTimeDataRetrieval();
 }

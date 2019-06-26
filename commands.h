@@ -103,5 +103,6 @@ void startRealTimeDataRetrieval(uint8_t reqType, uint8_t laneApprNum,
 
 float fixedPtToFloat(uint16_t t);
 uint16_t extract16BitFixedPt(QByteArray *arr, int locn);
+double doubleFrom24BitFixedPt(QByteArray *arr, int i);
 
 #endif // COMMANDS_H
