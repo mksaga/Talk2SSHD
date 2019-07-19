@@ -6,7 +6,6 @@
 
 #include <QByteArray>
 #include <QDateTime>
-#include <QFile>
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QSerialPort>
@@ -22,7 +21,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // set up serial port (decl. in header file)
     port = new QSerialPort();
-    QTimer *tickTock = new QTimer();
 
     file = new QFile("RTDATA.txt");
     file->open(QIODevice::WriteOnly);
@@ -30,19 +28,6 @@ MainWindow::MainWindow(QWidget *parent) :
     serialWorker = new SerialWorker;
     serialWorker->setSerialPortPtr(port);
     serialWorker->setFilePtr(file);
-
-//    serialThread = new QThread;
-
-//    connect(tickTock,       SIGNAL(timeout()),
-//            serialWorker,   SLOT(getNewSensorData()));
-
-    serialWorker->setTimerPtr(tickTock);
-
-    // delete worker once it's done
-//    connect(serialThread, &QThread::finished, serialWorker, &QObject::deleteLater);
-
-    // once data has finished writing, refresh the view
-    connect(serialWorker, &SerialWorker::fileReadyForRead, this, &MainWindow::updateDataView);
 
     // one-time CRC table generation
     SmCommsGenerateCrc8Table(Crc8Table, COMMS_CRC8_TABLE_LENGTH);
@@ -74,19 +59,6 @@ MainWindow::MainWindow(QWidget *parent) :
         }
     }
 
-    // set sensorID
-//    q = QString("<html><head/><body><p><span style=\" font-size:14pt; font-weight:600; color:#0055ff;\">%1</span></p></body></html>").arg(sensorId);
-//    ui->sensorId->setText(q);
-
-    // Enhances color of real-time data setup button
-//    QPushButton *button = ui->writeDataSetup;
-//    QPalette pal = button->palette();
-//    pal.setColor(QPalette::Button, QColor(Qt::blue));
-//    button->setAutoFillBackground(true);
-//    button->setPalette(pal);
-//    button->update();
-
-    ui->dCDateTimeSelect->setCalendarPopup(true);
     ui->dCDateTimeSelect->setDateTime(QDateTime::currentDateTime());
 }
 
@@ -95,9 +67,6 @@ MainWindow::~MainWindow()
     if (port->isOpen()) {
         port->close();
     }
-
-//    serialThread->exit();
-//    serialThread->wait();
 
     delete file;
     delete ui;
@@ -109,8 +78,6 @@ MainWindow::~MainWindow()
     delete lastReadDataConf;
     delete lastReadDateTime;
     delete lastWrittenConf;
-
-//    delete serialThread;
 }
 
 bool isEqual (float f1, float f2)
@@ -132,10 +99,10 @@ void MainWindow::on_refreshComPorts_clicked()
         ui->comPortSelect->addItem("No ports available");
     } else {
         // iterate over all available ports
-        foreach(QSerialPortInfo p, QSerialPortInfo::availablePorts())
-        {
-            ui->comPortSelect->addItem(QString(p.portName() + " (" +
-                                               p.description() + ")"));
+        foreach(QSerialPortInfo p, QSerialPortInfo::availablePorts()) {
+            QString q = QString(p.portName() + " (" +
+                                p.description() + ")");
+            ui->comPortSelect->addItem(q);
         }
     }
 }

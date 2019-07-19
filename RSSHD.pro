@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui serialport
+QT       += core gui serialport network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -28,16 +28,16 @@ SOURCES += \
         commands.cpp \
         main.cpp \
         mainwindow.cpp \
-    mytcp.cpp \
         sensor_utils.cpp \
         serialworker.cpp \
+        tcpworker.cpp
 
 HEADERS += \
         commands.h \
         mainwindow.h \
-        mytcp.h \
         sensor_utils.h \
-        serialworker.h
+        serialworker.h \
+        tcpworker.h
 
 FORMS += \
         mainwindow.ui

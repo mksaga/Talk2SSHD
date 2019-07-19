@@ -1,6 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+
+#include <QFile>
 #include <QLabel>
 #include <QMainWindow>
 #include <QSerialPort>
@@ -10,6 +12,7 @@
 
 #include "mytcp.h"
 #include "sensor_utils.h"
+#include "serialworker.h"
 
 namespace Ui {
 class MainWindow;
@@ -18,6 +21,7 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
+
     uint8_t Crc8Table[COMMS_CRC8_TABLE_LENGTH] = {0};
     uint16_t sensorId;
     QByteArray memo;
@@ -26,7 +30,6 @@ class MainWindow : public QMainWindow
     QString errString;
     uint16_t errCode;
     QTimer *sensorClock;
-
 
     int numApproaches;
     int numLanes;
