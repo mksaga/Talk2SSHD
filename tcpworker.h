@@ -11,7 +11,9 @@ class TCPWorker : public QObject
     Q_OBJECT
 public:
     explicit TCPWorker(QObject *parent = nullptr);
-    bool startConnection();
+    void setDest(QString addr);
+    void setPort(int port);
+    bool startConnection(QString addr, int port);
     void closeConnection();
     void writeToSensor(QByteArray *msg, QByteArray *resp,
                        uint16_t *errBytes, qint64 len);

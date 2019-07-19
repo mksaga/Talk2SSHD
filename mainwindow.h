@@ -10,13 +10,16 @@
 #include <QThread>
 #include <QTimer>
 
-#include "mytcp.h"
+#include "tcpworker.h"
 #include "sensor_utils.h"
 #include "serialworker.h"
 
 namespace Ui {
 class MainWindow;
 }
+
+// To define whether sensor is connected via serial or IP
+enum CXN_MODE { SERIAL, IP };
 
 class MainWindow : public QMainWindow
 {
@@ -60,6 +63,8 @@ class MainWindow : public QMainWindow
     sensor_datetime *lastReadDateTime;
     approach *appr;
 
+    bool sensorConnected;
+    CXN_MODE connectionMode;
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
@@ -78,6 +83,7 @@ private:
     QSerialPort *port;
     QThread *serialThread;
     SerialWorker *serialWorker;
+    TCPWorker *tcpWorker;
     Ui::MainWindow *ui;
 
 private slots:

@@ -7,11 +7,13 @@ TCPWorker::TCPWorker(QObject *parent) : QObject(parent)
     (void)parent;
 }
 
-bool TCPWorker::startConnection()
+// Should I implement the setDest and setPort methods?
+
+bool TCPWorker::startConnection(QString addr, int p)
 {
     sock = new QTcpSocket(this);
-    dest = new QHostAddress(GATEWAY_IP);
-    port = 10001;
+    dest = new QHostAddress(addr);
+    port = p;
     timeout = 2000;
 
     sock->connectToHost(*dest, port);

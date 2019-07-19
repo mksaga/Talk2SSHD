@@ -17,7 +17,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    QString q;
+
+    sensorConnected = false;
 
     // set up serial port (decl. in header file)
     port = new QSerialPort();
@@ -29,8 +30,11 @@ MainWindow::MainWindow(QWidget *parent) :
     serialWorker->setSerialPortPtr(port);
     serialWorker->setFilePtr(file);
 
+    tcpWorker = new TCPWorker();
+
     // one-time CRC table generation
     SmCommsGenerateCrc8Table(Crc8Table, COMMS_CRC8_TABLE_LENGTH);
+
     errCode = 0;
     sensorId = 0x0168;
     resp.resize(90);
@@ -52,8 +56,7 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->comPortSelect->addItem("No ports available");
     } else {
         // iterate over all available ports
-        foreach(QSerialPortInfo p, QSerialPortInfo::availablePorts())
-        {
+        foreach(QSerialPortInfo p, QSerialPortInfo::availablePorts()) {
             ui->comPortSelect->addItem(QString(p.portName() + " (" +
                                                p.description() + ")"));
         }
@@ -67,6 +70,9 @@ MainWindow::~MainWindow()
     if (port->isOpen()) {
         port->close();
     }
+
+    delete serialWorker;
+    delete tcpWorker;
 
     delete file;
     delete ui;
@@ -250,7 +256,7 @@ void MainWindow::on_writeSensorConfig_clicked()
 
 void MainWindow::refreshDataConfig()
 {
-    if (!port->isOpen()) {
+    if (!sensorConnected) {
         QMessageBox::critical(this, "T2SSHD", "Error: not connected to sensor");
         return;
     }
@@ -453,7 +459,7 @@ void MainWindow::refreshDateTime()
     if (sensorClock->isActive()) {
         return;
     }
-    if (!port->isOpen()) {
+    if (!sensorConnected) {
         QMessageBox::critical(this, "T2SSHD", "Error: not connected to sensor");
         return;
     }
@@ -478,7 +484,7 @@ void MainWindow::refreshDateTime()
 
 void MainWindow::refreshActiveLanes()
 {
-    if (!port->isOpen()) {
+    if (!sensorConnected) {
         QMessageBox::critical(this, "T2SSHD", "Error: not connected to sensor");
         return;
     }
@@ -505,7 +511,7 @@ void MainWindow::refreshActiveLanes()
         laneLabels[r][2]->setText(QString(c));
         if (laneGridInitialized) {}
         else {
-            if (r==0) {
+            if (r == 0) {
                 QLabel *t0 = new QLabel("Lane Number");
                 QLabel *t1 = new QLabel("Lane Description");
                 QLabel *t2 = new QLabel("Direction (R/L)");
@@ -519,25 +525,11 @@ void MainWindow::refreshActiveLanes()
         }
     }
     laneGridInitialized = 1;
-
-    /*
-    QGridLayout *layout = ui->gridlayout;
-    QLabel* m_boardLbArray[8][8];
-    for(int row=0; row<8; row++)
-      for(int col=0; col<8; col++)
-      {
-        m_boardLbArray[row][col] = new QLabel(this);
-        m_boardLbArray[row][col]->setText(tr("This is row %1, col %2")
-          .arg(row).arg(col));
-        layout->addWidget(m_boardLbArray[row][col], row, col);
-      }
-    */
-
 }
 
 void MainWindow::refreshSpeedBins()
 {
-    if (!port->isOpen()) {
+    if (!sensorConnected) {
         QMessageBox::critical(this, "T2SSHD", "Error: not connected to sensor");
         return;
     }
@@ -672,7 +664,7 @@ void MainWindow::on_confTabs_tabBarClicked(int index)
 
 void MainWindow::refreshApproachInfo()
 {
-    if (!port->isOpen()) {
+    if (!sensorConnected) {
         QMessageBox::critical(this, "T2SSHD", "Error: not connected to sensor");
         return;
     }
@@ -714,7 +706,7 @@ void MainWindow::on_readApproachConfBtn_clicked()
 
 void MainWindow::on_refreshClassConfig_clicked()
 {
-    if (!port->isOpen()) {
+    if (!sensorConnected) {
         QMessageBox::critical(this, "T2SSHD", "Error: not connected to sensor");
         return;
     }
