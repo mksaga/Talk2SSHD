@@ -343,7 +343,10 @@ void SerialWorker::getNewSensorData()
             ms = (tmpHi << 8) | (resp.at(21) & 0x00FF);
 
             (*retrievedDataStream).setPadChar('0');
-            (*retrievedDataStream) << qSetFieldWidth(2) << month << "/" << day << "/" << qSetFieldWidth(4) << year << " " << qSetFieldWidth(2) << hrs << ":" << mins << ":" << secs << " ";
+            (*retrievedDataStream) << qSetFieldWidth(2) << month << "/" << day << "/" <<
+                                      qSetFieldWidth(4) << year << " " <<
+                                      qSetFieldWidth(2) << hrs << ":" << mins <<
+                                      ":" << secs << " ";
             QChar z = QChar(48);
             QString q = QString("%1/%2/%3 %4:%5:%6").arg(month, 2, 10, z).arg(day, 2, 10, z).arg(year, 4).arg(hrs, 2, 10, z).arg(mins, 2, 10, z).arg(secs, 2, 10, z);
             newDataLine.append(q);

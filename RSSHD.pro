@@ -28,12 +28,14 @@ SOURCES += \
         commands.cpp \
         main.cpp \
         mainwindow.cpp \
+    mytcp.cpp \
         sensor_utils.cpp \
         serialworker.cpp \
 
 HEADERS += \
         commands.h \
         mainwindow.h \
+        mytcp.h \
         sensor_utils.h \
         serialworker.h
 

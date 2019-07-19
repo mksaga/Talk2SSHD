@@ -75,8 +75,8 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     // set sensorID
-    q = QString("<html><head/><body><p><span style=\" font-size:14pt; font-weight:600; color:#0055ff;\">%1</span></p></body></html>").arg(sensorId);
-    ui->sensorId->setText(q);
+//    q = QString("<html><head/><body><p><span style=\" font-size:14pt; font-weight:600; color:#0055ff;\">%1</span></p></body></html>").arg(sensorId);
+//    ui->sensorId->setText(q);
 
     // Enhances color of real-time data setup button
 //    QPushButton *button = ui->writeDataSetup;
@@ -186,7 +186,7 @@ void MainWindow::on_connectToCom_clicked()
 
             // update connection status text
             QString q = "<html><head/><body><p align=\"center\"><span style=\"font-size:9pt; font-weight:600; color:#0d9332;\">CONNECTED </span></p></body></html>";
-            ui->comStatus->setText(q);
+            ui->conxnStatus->setText(q);
             // re-enable button, set it to Close
             ui->connectToCom->setEnabled(true);
             ui->connectToCom->setText("Close Port");
@@ -217,7 +217,7 @@ void MainWindow::on_connectToCom_clicked()
         {
             port->close();
             QString q = "<html><head/><body><p align=\"center\"><span style=\"font-size:9pt; font-weight:600; color:#ff0000;\">DISCONNECTED </span></p></body></html>";
-            ui->comStatus->setText(q);
+            ui->conxnStatus->setText(q);
             ui->connectToCom->setText("Open Port");
         }
     }
@@ -911,4 +911,36 @@ void MainWindow::on_stopDataRetrieval_clicked()
 void MainWindow::updateDataView(QString dataLine)
 {
     ui->dataView->appendPlainText(dataLine);
+}
+
+void MainWindow::on_connectViaCom_clicked()
+{
+    // show all the COM related fields/labels
+    ui->comPortSelect->show();
+    ui->refreshComPorts->show();
+    ui->connectToCom->show();
+    ui->comPortsAvailableLabel->show();
+
+    // hide all IP related fields/labels
+    ui->ipAddrEntry->hide();
+    ui->ipAddrLabel->hide();
+    ui->ipPortEntry->hide();
+    ui->ipPortLabel->hide();
+    ui->ipConnect->hide();
+}
+
+void MainWindow::on_connectViaIp_clicked()
+{
+    // hide all COM related fields/labels
+    ui->comPortSelect->hide();
+    ui->refreshComPorts->hide();
+    ui->connectToCom->hide();
+    ui->comPortsAvailableLabel->hide();
+
+    // show all IP related fields/labels
+    ui->ipAddrEntry->show();
+    ui->ipAddrLabel->show();
+    ui->ipPortEntry->show();
+    ui->ipPortLabel->show();
+    ui->ipConnect->show();
 }

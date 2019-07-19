@@ -8,8 +8,8 @@
 #include <QThread>
 #include <QTimer>
 
-#include <sensor_utils.h>
-#include <serialworker.h>
+#include "mytcp.h"
+#include "sensor_utils.h"
 
 namespace Ui {
 class MainWindow;
@@ -104,6 +104,8 @@ private slots:
     void on_refreshSensorConfig_clicked();
     void on_dataIntrvlRTD_valueChanged(int arg1);
     void on_stopDataRetrieval_clicked();
+    void on_connectViaCom_clicked();
+    void on_connectViaIp_clicked();
 };
 
 #endif // MAINWINDOW_H
