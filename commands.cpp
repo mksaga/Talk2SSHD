@@ -1902,6 +1902,9 @@ void startRealTimeDataRetrieval(uint8_t reqType, uint8_t laneApprNum,
     QDateTime dt;
 
     uint8_t seqNumber = 0;
+    (void)seqNumber;
+    (void)reqType;
+    (void)laneApprNum;
 
     *errBytes = 0;
 

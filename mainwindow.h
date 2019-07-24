@@ -57,10 +57,10 @@ class MainWindow : public QMainWindow
     char dataInfoRead = 0;
     char laneInfoRead = 0;
 
-    sensor_config *lastReadConf;
-    sensor_config *lastWrittenConf;
+    sensor_config *sensorConf;
+//    sensor_config *lastWrittenConf;
     sensor_data_config *lastReadDataConf;
-    sensor_datetime *lastReadDateTime;
+    sensor_datetime *sensorDateTime;
     approach *appr;
 
     bool sensorConnected;
@@ -77,6 +77,7 @@ private:
     void refreshDateTime();
     bool refreshSensorConfig();
     void refreshSpeedBins();
+    void sendToSensor(QByteArray *msg, char msgType);
     bool validateIntervalDataSetup();
 
     QFile *file;
@@ -115,6 +116,19 @@ private slots:
     void on_stopDataRetrieval_clicked();
     void on_connectViaCom_clicked();
     void on_connectViaIp_clicked();
+    void on_ipConnect_clicked();
+    void on_hrDial_valueChanged(int value);
+    void on_minDial_valueChanged(int value);
+    void on_secDial_valueChanged(int value);
+    void on_monthDial_valueChanged(int value);
+    void on_dayDial_valueChanged(int value);
+    void on_hrSpinBox_valueChanged(int arg1);
+    void on_minSpinBox_valueChanged(int arg1);
+    void on_secSpinBox_valueChanged(int arg1);
+    void on_monthSpinBox_valueChanged(int arg1);
+    void on_daySpinBox_valueChanged(int arg1);
+    void on_yearSpinBox_valueChanged(int arg1);
+    void on_setDateTimeBtn_clicked();
 };
 
 #endif // MAINWINDOW_H

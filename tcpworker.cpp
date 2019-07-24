@@ -64,7 +64,7 @@ void TCPWorker::writeToSensor(QByteArray *msg, QByteArray *resp,
                 t2 = (resp->at(15)) & 0x00FF;
                 *errBytes = (t1 | t2);
             }
-
+            qDebug() << "Data reception complete.";
         } else {
             qDebug() << "Read timed out.";
         }
