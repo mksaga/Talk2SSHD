@@ -233,7 +233,6 @@ void MainWindow::on_connectToCom_clicked()
     }
 }
 
-// DOESN'T WORK, FIX LATER
 void MainWindow::on_writeSensorConfig_clicked()
 {
     // orientation
@@ -361,7 +360,7 @@ void MainWindow::refreshDataConfig()
     ui->loopSize->setText(q);
 
     memo = genReadMsg(Crc8Table, 0x0D, 0, sensorId);
-    write_message_to_sensor(port, &memo, &resp, Crc8Table, &errCode);
+    sendToSensor(&memo, 0);
     if (parse_global_push_mode_read_resp(&resp, errString)) {
         ui->uartLocalPushMode->setChecked(true);
     } else {
@@ -575,7 +574,7 @@ void MainWindow::refreshSpeedBins()
         return;
     }
     memo = genReadMsg(Crc8Table, 0x1D, 15, sensorId);
-    write_message_to_sensor(port, &memo, &resp, Crc8Table, &errCode);
+    sendToSensor(&memo, 0);
     parse_speed_bin_conf_read(&resp, &numSpeedBins, speedBins, errString);
     if (errString.startsWith('E')) return;
     QString q = QString("<html><head/><body><p align=\"right\"><span style=\" font-size:12pt; font-weight:600;\">%1</span></p></body></html>").arg(numSpeedBins);
@@ -709,14 +708,18 @@ void MainWindow::refreshApproachInfo()
         QMessageBox::critical(this, "T2SSHD", "Error: not connected to sensor");
         return;
     }
+
     approachInfoRead = 1;
     memo = genReadMsg(Crc8Table, 0x28, 4, sensorId);
-    write_message_to_sensor(port, &memo, &resp, Crc8Table, &errCode);
+    sendToSensor(&memo, 0);
+
     numApproaches = parse_approach_info_read_resp(&resp, appr, errString);
     QString q = QString("<html><head/><body><p align=\"right\"><span style=\"font-size:12pt; font-weight:600;\">%1</span></p></body></html>").arg(numApproaches);
     ui->numApproachesConfigd->setText(q);
     int i;
+    ui->approachSelect->setDisabled(true);
     ui->approachSelect->clear();
+    ui->approachSelect->setDisabled(false);
     for (i=1; i<=numApproaches; i++) {
         q = QString("Approach %1").arg(i);
         ui->approachSelect->addItem(q);
@@ -752,7 +755,7 @@ void MainWindow::on_refreshClassConfig_clicked()
         return;
     }
     memo = genReadMsg(Crc8Table, 0x13, 0, sensorId);
-    write_message_to_sensor(port, &memo, &resp, Crc8Table, &errCode);
+    sendToSensor(&memo, 0);
     parse_classif_read_resp(&resp, classBounds, &numClasses, errString);
     QString str = QString("<html><head/><body><p><span style=\" font-size:12pt; font-weight:600;\">%1</span></p></body></html>").arg(numClasses);
     ui->numClasses->setText(str);
@@ -1143,4 +1146,25 @@ void MainWindow::on_setDateTimeBtn_clicked()
     sendToSensor(&memo, 1);
     if (errCode == 0) { QMessageBox::information(this, "T2SSHD", "Success!"); }
     refreshDateTime();
+}
+
+void MainWindow::on_approachSelect_currentIndexChanged(int index)
+{
+    approach selectedApproach = *(appr + index);
+    uint8_t numLanes = selectedApproach.numLanes;
+    uint8_t *lanesInThisApproach = selectedApproach.lanesAssigned;
+
+    for (int i=0; i<numLanes; i++) {
+        int laneId = *(lanesInThisApproach + i);
+        switch(laneId) {
+            case 0: ui->lane0_2->setChecked(true); break;
+            case 1: ui->lane1->setChecked(true); break;
+            case 2: ui->lane2->setChecked(true); break;
+            case 3: ui->lane3->setChecked(true); break;
+            case 4: ui->lane4->setChecked(true); break;
+            case 5: ui->lane5->setChecked(true); break;
+            case 6: ui->lane6->setChecked(true); break;
+            case 7: ui->lane7->setChecked(true); break;
+        }
+    }
 }

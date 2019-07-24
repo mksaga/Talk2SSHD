@@ -129,6 +129,7 @@ private slots:
     void on_daySpinBox_valueChanged(int arg1);
     void on_yearSpinBox_valueChanged(int arg1);
     void on_setDateTimeBtn_clicked();
+    void on_approachSelect_currentIndexChanged(int index);
 };
 
 #endif // MAINWINDOW_H

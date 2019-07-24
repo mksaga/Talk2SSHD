@@ -38,5 +38,5 @@ unsigned char SmCommsComputeCrc8(uint8_t *Crc8Table, QByteArray *bufferPtr,
         tableIndex = crcValue ^ (bufferPtr->at(i) & 0xFF);
         crcValue = Crc8Table[tableIndex];
     }
-    return crcValue;
+    return (crcValue & 0x00FF);
 }

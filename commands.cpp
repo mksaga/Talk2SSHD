@@ -248,8 +248,8 @@ void parse_gen_conf_read_response(QByteArray response,
         loc.truncate(realZero);
         s->location = loc;
     } else {
-        s->location = response.mid(index, 32);
-        index += 32;
+        s->location = response.mid(index, 64);
+        index += 64;
     }
 
     // next 32 bytes contain sensor description
@@ -273,8 +273,8 @@ void parse_gen_conf_read_response(QByteArray response,
         des.truncate(realZero);
         s->description = des;
     } else {
-        s->description = response.mid(index, 32);
-        index += 32;
+        s->description = response.mid(index, 64);
+        index += 64;
     }
 
     // next 16 bytes: serial
@@ -316,7 +316,7 @@ QByteArray gen_config_write(uint8_t *Crc8Table,
     msg.append(zero);
 
     // payload size (1)
-    msg.append(0x56);
+    msg.append(0x96);
 
     // header CRC (1)
     unsigned char crc = SmCommsComputeCrc8(Crc8Table, &msg, 10);
@@ -340,17 +340,17 @@ QByteArray gen_config_write(uint8_t *Crc8Table,
     msg.append(new_config->orientation);
     msg.append(new_config->orientation);
 
-    // sensor location string (32)
+    // sensor location string (64 bytes, 32 Unicode characters)
     int locnLength = (new_config->location).length();
     msg.append(new_config->location);
-    for (int i=locnLength; i<32; i++) {
+    for (int i=locnLength; i<64; i++) {
         msg.append(zero);
     }
 
-    // sensor description (32)
+    // sensor description (64 bytes, 32 Unicode characters)
     int descrLength = (new_config->description).length();
     msg.append(new_config->description);
-    for (int i=descrLength; i<32; i++) {
+    for (int i=descrLength; i<64; i++) {
         msg.append(zero);
     }
 
@@ -369,7 +369,7 @@ QByteArray gen_config_write(uint8_t *Crc8Table,
     // snips off the body portion of message
     QByteArray body = msg.mid(index, -1);
     // 86 = number of bytes in body portion of message
-    crc = SmCommsComputeCrc8(Crc8Table, &body, 86);
+    crc = SmCommsComputeCrc8(Crc8Table, &body, 0x96);
     msg.append(crc);
 
     return msg;

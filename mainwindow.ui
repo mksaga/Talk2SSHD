@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1415</width>
-    <height>944</height>
+    <width>1443</width>
+    <height>888</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -47,7 +47,7 @@
          <property name="maximumSize">
           <size>
            <width>16777215</width>
-           <height>200</height>
+           <height>125</height>
           </size>
          </property>
          <property name="title">
@@ -190,7 +190,7 @@
             <item>
              <layout class="QHBoxLayout" name="sensorLoc">
               <item>
-               <widget class="QLabel" name="label_4">
+               <widget class="QLabel" name="sensorLocnLabel">
                 <property name="minimumSize">
                  <size>
                   <width>89</width>
@@ -235,7 +235,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QLabel" name="label_7">
+               <widget class="QLabel" name="charLimit1">
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
@@ -252,7 +252,7 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_3">
               <item>
-               <widget class="QLabel" name="label_5">
+               <widget class="QLabel" name="sensorDescrLabel">
                 <property name="text">
                  <string>Sensor Description</string>
                 </property>
@@ -285,7 +285,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QLabel" name="label_8">
+               <widget class="QLabel" name="charLimit2">
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
@@ -304,7 +304,7 @@
           <item row="2" column="0">
            <layout class="QHBoxLayout" name="unitSelect">
             <item>
-             <widget class="QLabel" name="label_9">
+             <widget class="QLabel" name="unitsLabel">
               <property name="text">
                <string>Units</string>
               </property>
@@ -351,13 +351,6 @@
             </property>
            </spacer>
           </item>
-          <item row="3" column="1">
-           <widget class="QPushButton" name="refreshSensorConfig">
-            <property name="text">
-             <string>RefreshSensorConfig</string>
-            </property>
-           </widget>
-          </item>
           <item row="7" column="0" rowspan="2" colspan="2">
            <widget class="QTabWidget" name="confTabs">
             <property name="sizePolicy">
@@ -370,7 +363,7 @@
              <enum>QTabWidget::Triangular</enum>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>2</number>
             </property>
             <widget class="QWidget" name="DataConfig">
              <attribute name="title">
@@ -1156,6 +1149,13 @@
             </widget>
            </widget>
           </item>
+          <item row="3" column="1">
+           <widget class="QPushButton" name="refreshSensorConfig">
+            <property name="text">
+             <string>RefreshSensorConfig</string>
+            </property>
+           </widget>
+          </item>
           <item row="2" column="1">
            <widget class="QPushButton" name="writeSensorConfig">
             <property name="text">
@@ -1192,15 +1192,15 @@
             </widget>
            </widget>
           </item>
-          <item row="4" column="1">
-           <spacer name="verticalSpacer">
+          <item row="4" column="0" colspan="2">
+           <spacer name="horizontalSpacer_2">
             <property name="orientation">
-             <enum>Qt::Vertical</enum>
+             <enum>Qt::Horizontal</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>20</width>
-              <height>40</height>
+              <width>40</width>
+              <height>20</height>
              </size>
             </property>
            </spacer>
@@ -1398,127 +1398,87 @@
          <property name="title">
           <string>View Real-Time Data</string>
          </property>
-         <widget class="QPlainTextEdit" name="dataView">
+         <widget class="QWidget" name="">
           <property name="geometry">
            <rect>
-            <x>150</x>
-            <y>-280</y>
-            <width>781</width>
-            <height>591</height>
+            <x>10</x>
+            <y>20</y>
+            <width>821</width>
+            <height>671</height>
            </rect>
           </property>
-         </widget>
-         <widget class="QLabel" name="label_28">
-          <property name="geometry">
-           <rect>
-            <x>80</x>
-            <y>310</y>
-            <width>71</width>
-            <height>16</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Hours (0-23)</string>
-          </property>
-         </widget>
-         <widget class="QDial" name="dial">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="geometry">
-           <rect>
-            <x>480</x>
-            <y>510</y>
-            <width>79</width>
-            <height>64</height>
-           </rect>
-          </property>
-         </widget>
-         <widget class="QDial" name="secDial">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="geometry">
-           <rect>
-            <x>246</x>
-            <y>510</y>
-            <width>79</width>
-            <height>64</height>
-           </rect>
-          </property>
-          <property name="maximum">
-           <number>59</number>
-          </property>
-         </widget>
-         <widget class="QDial" name="monthDial">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="geometry">
-           <rect>
-            <x>331</x>
-            <y>510</y>
-            <width>58</width>
-            <height>64</height>
-           </rect>
-          </property>
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <number>12</number>
-          </property>
-         </widget>
-         <widget class="QDial" name="minDial">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="geometry">
-           <rect>
-            <x>161</x>
-            <y>510</y>
-            <width>79</width>
-            <height>64</height>
-           </rect>
-          </property>
-          <property name="maximum">
-           <number>59</number>
-          </property>
-         </widget>
-         <widget class="QDial" name="hrDial">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="geometry">
-           <rect>
-            <x>76</x>
-            <y>510</y>
-            <width>79</width>
-            <height>64</height>
-           </rect>
-          </property>
-          <property name="maximum">
-           <number>23</number>
-          </property>
-         </widget>
-         <widget class="QDial" name="dayDial">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="geometry">
-           <rect>
-            <x>395</x>
-            <y>510</y>
-            <width>79</width>
-            <height>64</height>
-           </rect>
-          </property>
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <number>31</number>
-          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_4">
+           <item>
+            <widget class="QPlainTextEdit" name="dataView"/>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_5">
+             <item>
+              <widget class="QDial" name="hrDial">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="maximum">
+                <number>23</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QDial" name="minDial">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="maximum">
+                <number>59</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QDial" name="secDial">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="maximum">
+                <number>59</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QDial" name="monthDial">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>12</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QDial" name="dayDial">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>31</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QDial" name="dial">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
          </widget>
         </widget>
        </item>
