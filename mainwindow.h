@@ -71,6 +71,7 @@ public:
     ~MainWindow();
 
 private:
+    bool classConfigChecked;
     void refreshApproachInfo();
     void refreshActiveLanes();
     void refreshDataConfig();
@@ -79,7 +80,8 @@ private:
     void refreshSpeedBins();
     void sendToSensor(QByteArray *msg, char msgType);
     bool validateIntervalDataSetup();
-    void startRealTimeDataRetrieval(int requestType);
+    void startRealTimeDataRetrieval(int requestType,
+                                    int indvLaneApprNum);
 
     QFile *file;
     QSerialPort *port;

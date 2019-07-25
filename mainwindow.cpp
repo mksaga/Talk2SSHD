@@ -31,6 +31,9 @@ MainWindow::MainWindow(QWidget *parent) :
     serialWorker->setFilePtr(file);
 
     tcpWorker = new TCPWorker();
+    tcpWorker->setFilePtr(file);
+
+    classConfigChecked = false;
 
     // one-time CRC table generation
     SmCommsGenerateCrc8Table(Crc8Table, COMMS_CRC8_TABLE_LENGTH);
@@ -761,15 +764,20 @@ void MainWindow::on_refreshClassConfig_clicked()
     parse_classif_read_resp(&resp, classBounds, &numClasses, errString);
     QString str = QString("<html><head/><body><p><span style=\" font-size:12pt; font-weight:600;\">%1</span></p></body></html>").arg(numClasses);
     ui->numClasses->setText(str);
+
     QString unitAbbr = "ft";
 
-    int i;
-    for (i=0; i<numClasses; i++) {
-        QString q = QString("<html><head/><body><p><span style=\" font-size:10pt; font-weight:600;\">Class %1</span></p></body></html>").arg(i+1);
-        QString q2= QString("<html><head/><body><p align=\"right\"><span style=\" font-size:10pt; font-weight:600;\">%1%2</span></p></body></html>").arg(*(classBounds + i)).arg(unitAbbr);
-        QLabel *l = new QLabel(q);
-        QLabel *l2 = new QLabel(q2);
-        ui->classGrid->addRow(l, l2);
+    if (!classConfigChecked) {
+        // create new labels
+        int i;
+        for (i=0; i<numClasses; i++) {
+            QString q = QString("<html><head/><body><p><span style=\" font-size:10pt; font-weight:600;\">Class %1</span></p></body></html>").arg(i+1);
+            QString q2= QString("<html><head/><body><p align=\"right\"><span style=\" font-size:10pt; font-weight:600;\">%1%2</span></p></body></html>").arg(*(classBounds + i)).arg(unitAbbr);
+            QLabel *l = new QLabel(q);
+            QLabel *l2 = new QLabel(q2);
+            ui->classGrid->addRow(l, l2);
+        }
+        classConfigChecked = true;
     }
 }
 
@@ -844,32 +852,32 @@ void MainWindow::on_writeDataSetup_clicked()
 {
     if (validateIntervalDataSetup()) {
         int reqType = 3;
-        // y : the lane/approach number for individual lane or appr
-        int y = 4;
+        // the lane/approach number for individual lane or appr
+        int individualLaneApprNum = 4;
         bool isNum = false;
 
         // reqest type for single lane is 1, single appr is 2, all is 3
         if (ui->dCSingleLaneRadio->isChecked()) {
             reqType = 1;
-            y = ui->dCSingleLaneNum->text().toInt(&isNum);
+            individualLaneApprNum = ui->dCSingleLaneNum->text().toInt(&isNum);
         } else if (ui->dCSingleApprRadio->isChecked()) {
             reqType = 2;
-            y = ui->dCSingleApprNum->text().toInt(&isNum);
+            individualLaneApprNum = ui->dCSingleApprNum->text().toInt(&isNum);
         }
 
         QString txt;
         QString tmp;
         if (reqType == 1) {
-            if (y==0xFF) {
+            if (individualLaneApprNum==0xFF) {
                 tmp = QString("Get All Lanes");
             } else {
-                tmp = QString("Get Single Lane (%1)").arg(y+1);
+                tmp = QString("Get Single Lane (%1)").arg(individualLaneApprNum+1);
             }
         } else if (reqType == 2) {
-            if (y==0xFF) {
+            if (individualLaneApprNum==0xFF) {
                 tmp = QString("Get All Approaches");
             } else {
-                tmp = QString("Get Single Approach (%1)").arg(y+1);
+                tmp = QString("Get Single Approach (%1)").arg(individualLaneApprNum+1);
             }
         }
 
@@ -883,31 +891,36 @@ void MainWindow::on_writeDataSetup_clicked()
         b.setDefaultButton(QMessageBox::Ok);
         int ret = b.exec();
         if (ret == QMessageBox::Ok) {
-
-            serialWorker->startRealTimeDataRetrieval(reqType, y, Crc8Table,
-                                                     lastReadDataConf,
-                                                     sensorId, dataInterval,
-                                                     numLanes, numApproaches,
-                                                     &errCode);
+            startRealTimeDataRetrieval(reqType, individualLaneApprNum);
         }
     } else {
         printf("Nope!\n");
     }
 }
 
-void MainWindow::startRealTimeDataRetrieval(int reqType)
+void MainWindow::startRealTimeDataRetrieval(int reqType,
+                                            int individualLaneApprNum)
 {
-    if (port->isOpen()) {
-        // write via serial
-        serialWorker->startRealTimeDataRetrieval(reqType, y, Crc8Table,
-                                                 lastReadDataConf,
-                                                 sensorId, dataInterval,
-                                                 numLanes, numApproaches,
-                                                 &errCode);
+    if (!sensorConnected) {
+        return;
     } else {
-        // write via IP
-
+        if (port->isOpen()) {
+            // write via serial
+            serialWorker->startRealTimeDataRetrieval(reqType, individualLaneApprNum, Crc8Table,
+                                                     lastReadDataConf,
+                                                     sensorId, dataInterval,
+                                                     numLanes, numApproaches,
+                                                     &errCode);
+        } else {
+            // write via IP
+            tcpWorker->startRealTimeDataRetrieval(reqType, individualLaneApprNum, Crc8Table,
+                                                  lastReadDataConf,
+                                                  sensorId, dataInterval,
+                                                  numLanes, numApproaches,
+                                                  &errCode);
+        }
     }
+
 }
 
 void MainWindow::on_refreshSensorConfig_clicked()
@@ -1008,7 +1021,7 @@ void MainWindow::on_ipConnect_clicked()
         // attempt a TCP connection
         bool connectOk = tcpWorker->startConnection(destAddr, destPort);
         if (!connectOk) {
-            QMessageBox::critical(this, "T2SSHD", "Couldn't reach that address/port combination :(");
+            QMessageBox::critical(this, "T2SSHD", "Couldn't reach that address/port combination");
             ui->ipConnect->setEnabled(true);
             return;
         }
