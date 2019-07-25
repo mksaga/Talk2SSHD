@@ -66,6 +66,8 @@ class MainWindow : public QMainWindow
     bool sensorConnected;
     CXN_MODE connectionMode;
 
+    bool dataRetrievalHasBeenClicked;
+
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -120,11 +122,6 @@ private slots:
     void on_connectViaCom_clicked();
     void on_connectViaIp_clicked();
     void on_ipConnect_clicked();
-    void on_hrDial_valueChanged(int value);
-    void on_minDial_valueChanged(int value);
-    void on_secDial_valueChanged(int value);
-    void on_monthDial_valueChanged(int value);
-    void on_dayDial_valueChanged(int value);
     void on_hrSpinBox_valueChanged(int arg1);
     void on_minSpinBox_valueChanged(int arg1);
     void on_secSpinBox_valueChanged(int arg1);

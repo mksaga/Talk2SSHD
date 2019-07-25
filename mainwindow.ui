@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1443</width>
+    <width>1852</width>
     <height>888</height>
    </rect>
   </property>
@@ -687,7 +687,7 @@
                <string>Set Date/Time</string>
               </property>
              </widget>
-             <widget class="QWidget" name="">
+             <widget class="QWidget" name="layoutWidget">
               <property name="geometry">
                <rect>
                 <x>10</x>
@@ -1398,87 +1398,21 @@
          <property name="title">
           <string>View Real-Time Data</string>
          </property>
-         <widget class="QWidget" name="">
+         <widget class="QPlainTextEdit" name="dataView">
           <property name="geometry">
            <rect>
-            <x>10</x>
-            <y>20</y>
-            <width>821</width>
+            <x>11</x>
+            <y>21</y>
+            <width>1241</width>
             <height>671</height>
            </rect>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_4">
-           <item>
-            <widget class="QPlainTextEdit" name="dataView"/>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_5">
-             <item>
-              <widget class="QDial" name="hrDial">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="maximum">
-                <number>23</number>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QDial" name="minDial">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="maximum">
-                <number>59</number>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QDial" name="secDial">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="maximum">
-                <number>59</number>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QDial" name="monthDial">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="minimum">
-                <number>1</number>
-               </property>
-               <property name="maximum">
-                <number>12</number>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QDial" name="dayDial">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="minimum">
-                <number>1</number>
-               </property>
-               <property name="maximum">
-                <number>31</number>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QDial" name="dial">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-          </layout>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
          </widget>
         </widget>
        </item>
@@ -1501,8 +1435,8 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_3"/>
   <buttongroup name="buttonGroup"/>
   <buttongroup name="buttonGroup_2"/>
+  <buttongroup name="buttonGroup_3"/>
  </buttongroups>
 </ui>

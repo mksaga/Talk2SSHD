@@ -12,6 +12,9 @@
 #include <QSerialPortInfo>
 #include <QString>
 
+#define GATEWAY_IP "166.153.62.218"
+#define GATEWAY_PORT "10001"
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -19,13 +22,17 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     sensorConnected = false;
+    classConfigChecked = false;
+    dataRetrievalHasBeenClicked = false;
 
-    // set up serial port (decl. in header file)
+    // set up serial port (declared in header file)
     port = new QSerialPort();
 
-    qDebug() << QDateTime::currentDateTime().toString("MM-dd-yyyy hh.mm.ss");
+//    qDebug() << QDateTime::currentDateTime().toString("MM-dd-yyyy hh.mm.ss");
 
-    const QString s = "RTDATA_" + QDateTime::currentDateTime().toString("MM-dd-yyyy hh.mm.ss") + ".txt";
+    const QString s = "RTDATA_" +
+            QDateTime::currentDateTime().toString("MM-dd-yyyy hh.mm.ss") +
+            ".txt";
     file = new QFile(s);
     file->open(QIODevice::WriteOnly);
 
@@ -36,7 +43,15 @@ MainWindow::MainWindow(QWidget *parent) :
     tcpWorker = new TCPWorker();
     tcpWorker->setFilePtr(file);
 
-    classConfigChecked = false;
+    QTimer *dataRetrievalTimer = new QTimer();
+    serialWorker->setTimerPtr(dataRetrievalTimer);
+    tcpWorker->setTimerPtr(dataRetrievalTimer);
+
+    connect(serialWorker, &SerialWorker::fileReadyForRead,
+            this, &MainWindow::updateDataView);
+    connect(tcpWorker, &TCPWorker::fileReadyForRead,
+            this, &MainWindow::updateDataView);
+
 
     // one-time CRC table generation
     SmCommsGenerateCrc8Table(Crc8Table, COMMS_CRC8_TABLE_LENGTH);
@@ -48,7 +63,6 @@ MainWindow::MainWindow(QWidget *parent) :
     sensorClock = new QTimer(this);
     sensorClock->setTimerType(Qt::PreciseTimer);
 
-//    lastReadConf = new sensor_config;
     sensorConf = new sensor_config;
     lastReadDataConf = new sensor_data_config;
     sensorDateTime = new sensor_datetime;
@@ -73,10 +87,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // hide all IP related fields/labels
     ui->ipAddrEntry->hide();
-    ui->ipAddrEntry->setText("166.153.62.218");
+    ui->ipAddrEntry->setText(GATEWAY_IP);
 
     ui->ipPortEntry->hide();
-    ui->ipPortEntry->setText("10001");
+    ui->ipPortEntry->setText(GATEWAY_PORT);
 
     ui->ipAddrLabel->hide();
     ui->ipPortLabel->hide();
@@ -130,6 +144,12 @@ void MainWindow::on_refreshComPorts_clicked()
     }
 }
 
+/**
+ * @brief MainWindow::sendToSensor - generic method to send message to sensor,
+ * looks for serial connection then IP connection
+ * @param memo
+ * @param msgType
+ */
 void MainWindow::sendToSensor(QByteArray *memo, char msgType)
 {
     if (!sensorConnected) {
@@ -145,13 +165,19 @@ void MainWindow::sendToSensor(QByteArray *memo, char msgType)
             serialWorker->writeMsgToSensor(memo, &writeResp, Crc8Table, &errCode);
         }
     } else {
-        // write via IP
-        if (msgType == 0) {
-            int len = memo->size();
-            tcpWorker->writeToSensor(memo, &resp, &errCode, len);
+        // test if IP is connected
+        if (tcpWorker->getConnectionStatus()) {
+            // write via IP
+            if (msgType == 0) {
+                int len = memo->size();
+                tcpWorker->writeToSensor(memo, &resp, &errCode, len);
+            } else {
+                int len = memo->size();
+                tcpWorker->writeToSensor(memo, &writeResp, &errCode, len);
+            }
         } else {
-            int len = memo->size();
-            tcpWorker->writeToSensor(memo, &writeResp, &errCode, len);
+            QMessageBox::critical(this, "Talk2SSHD", "Not connected to sensor.");
+            return;
         }
     }
 }
@@ -175,6 +201,11 @@ bool MainWindow::refreshSensorConfig()
     }
 }
 
+/**
+ * @brief MainWindow::on_connectToCom_clicked
+ * Attempts serial connection to sensor. If successful, updates connection
+ * status var, connection status GUI label, sensor configuration section, etc.
+ */
 void MainWindow::on_connectToCom_clicked()
 {
     // are we connecting or disconnecting?
@@ -221,9 +252,9 @@ void MainWindow::on_connectToCom_clicked()
                 ui->unitsAmerican->setChecked(false);
             }
 
-            refreshDataConfig();
-            refreshActiveLanes();
-            refreshApproachInfo();
+//            refreshDataConfig();
+//            refreshActiveLanes();
+//            refreshApproachInfo();
         } else {
             ui->connectToCom->setEnabled(true);
             port->close();
@@ -240,6 +271,11 @@ void MainWindow::on_connectToCom_clicked()
     }
 }
 
+/**
+ * @brief MainWindow::on_writeSensorConfig_clicked
+ * Validates inputs for new sensor configuration, attempts to write valid
+ * inputs as new configuration
+ */
 void MainWindow::on_writeSensorConfig_clicked()
 {
     // orientation
@@ -300,6 +336,10 @@ void MainWindow::on_writeSensorConfig_clicked()
     refreshSensorConfig();
 }
 
+/**
+ * @brief MainWindow::refreshDataConfig
+ * Refreshes data configuration section
+ */
 void MainWindow::refreshDataConfig()
 {
     if (!sensorConnected) {
@@ -499,7 +539,8 @@ void MainWindow::updateSensorTime()
 }
 
 /**
- * @brief MainWindow::refreshDateTime : Sends new read_sensor_time message to the sensor
+ * @brief MainWindow::refreshDateTime :
+ * Sends new read_sensor_time message to the sensor
  */
 void MainWindow::refreshDateTime()
 {
@@ -529,6 +570,10 @@ void MainWindow::refreshDateTime()
     ui->sensorDate->setText(f);
 }
 
+/**
+ * @brief MainWindow::refreshActiveLanes
+ * Refreshes active lane information from the sensor
+ */
 void MainWindow::refreshActiveLanes()
 {
     if (!sensorConnected) {
@@ -550,6 +595,7 @@ void MainWindow::refreshActiveLanes()
             laneLabels[r][1] = new QLabel();
             laneLabels[r][2] = new QLabel();
         }
+
         laneLabels[r][0]->setText(q);
         char *p = (laneArr + r)->description;
         QString q2 = QString::fromLocal8Bit(p, 8);
@@ -573,6 +619,11 @@ void MainWindow::refreshActiveLanes()
     }
     laneGridInitialized = 1;
 }
+
+/**
+ * @brief MainWindow::refreshSpeedBins
+ * Refreshes speed bins from the sensor
+ */
 
 void MainWindow::refreshSpeedBins()
 {
@@ -786,7 +837,7 @@ void MainWindow::on_refreshClassConfig_clicked()
 
 bool MainWindow::validateIntervalDataSetup()
 {
-    if (!port->isOpen()) {
+    if (!sensorConnected) {
         QMessageBox::critical(this, "T2SSHD", "Error: not connected to sensor");
         return false;
     }
@@ -901,12 +952,20 @@ void MainWindow::on_writeDataSetup_clicked()
     }
 }
 
+/**
+ * @brief MainWindow::startRealTimeDataRetrieval
+ * Generic method to start retrieving real-time data from the sensor, either
+ * via serial or via IP
+ * @param reqType
+ * @param individualLaneApprNum
+ */
 void MainWindow::startRealTimeDataRetrieval(int reqType,
                                             int individualLaneApprNum)
 {
     if (!sensorConnected) {
         return;
     } else {
+        dataRetrievalHasBeenClicked = true;
         if (port->isOpen()) {
             // write via serial
             serialWorker->startRealTimeDataRetrieval(reqType, individualLaneApprNum, Crc8Table,
@@ -1048,61 +1107,6 @@ void MainWindow::on_ipConnect_clicked()
 
         sensorConnected = false;
     }
-}
-
-void MainWindow::on_hrDial_valueChanged(int value)
-{
-    QString q = ui->newTimeLabel->text();
-    //<html><head/><body><p><span style=" font-size:12pt; font-weight:600;">New Time &gt; 01:02:03 UTC 01/02/2003</span></p></body></html>
-
-    // update hr
-    QString app = QString("%1").arg(value, 2, 10, QChar(48));
-    q.replace(84, 2, app);
-    ui->newTimeLabel->setText(q);
-}
-
-void MainWindow::on_minDial_valueChanged(int value)
-{
-    QString q = ui->newTimeLabel->text();
-    //<html><head/><body><p><span style=" font-size:12pt; font-weight:600;">New Time &gt; 01:02:03 UTC 01/02/2003</span></p></body></html>
-
-    // update minute
-    QString app = QString("%1").arg(value, 2, 10, QChar(48));
-    q.replace(87, 2, app);
-    ui->newTimeLabel->setText(q);
-}
-
-void MainWindow::on_secDial_valueChanged(int value)
-{
-    QString q = ui->newTimeLabel->text();
-    //<html><head/><body><p><span style=" font-size:12pt; font-weight:600;">New Time &gt; 01:02:03 UTC 01/02/2003</span></p></body></html>
-
-    // update second
-    QString app = QString("%1").arg(value, 2, 10, QChar(48));
-    q.replace(90, 2, app);
-    ui->newTimeLabel->setText(q);
-}
-
-void MainWindow::on_monthDial_valueChanged(int value)
-{
-    QString q = ui->newTimeLabel->text();
-    //<html><head/><body><p><span style=" font-size:12pt; font-weight:600;">New Time &gt; 01:02:03 UTC 01/02/2003</span></p></body></html>
-
-    // update month
-    QString app = QString("%1").arg(value, 2, 10, QChar(48));
-    q.replace(97, 2, app);
-    ui->newTimeLabel->setText(q);
-}
-
-void MainWindow::on_dayDial_valueChanged(int value)
-{
-    QString q = ui->newTimeLabel->text();
-    //<html><head/><body><p><span style=" font-size:12pt; font-weight:600;">New Time &gt; 01:02:03 UTC 01/02/2003</span></p></body></html>
-
-    // update day
-    QString app = QString("%1").arg(value, 2, 10, QChar(48));
-    q.replace(100, 2, app);
-    ui->newTimeLabel->setText(q);
 }
 
 void MainWindow::on_hrSpinBox_valueChanged(int arg1)

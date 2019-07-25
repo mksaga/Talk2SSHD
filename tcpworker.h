@@ -17,10 +17,11 @@ class TCPWorker : public QObject
 public:
     explicit TCPWorker(QObject *parent = nullptr);
     void closeConnection();
-    void getNewSensorData();
+    bool getConnectionStatus();
     void setDest(QString addr);
     void setFilePtr(QFile*);
     void setPort(int port);
+    void setTimerPtr(QTimer*);
     bool startConnection(QString addr, int port);
     void startRealTimeDataRetrieval(uint8_t reqType, uint8_t lAN,
                                     uint8_t *Crc8Table,
@@ -32,13 +33,13 @@ public:
     void writeToSensor(QByteArray *msg, QByteArray *resp,
                        uint16_t *errBytes, qint64 len);
 
-signals:
-
-public slots:
 private:
     QTcpSocket *sock;
     QHostAddress *dest;
     quint16 port;
+    bool socketConnected;
+    bool dataRetrievalClicked;
+
     int timeout;
 
     int numClasses;
@@ -53,6 +54,12 @@ private:
     QString dataLine;
     QTextStream *retrievedDataStream;
     QTimer *dataTimer;
+
+public slots:
+    void getNewSensorData();
+
+signals:
+    void fileReadyForRead(QString s);
 };
 
 #endif // TCPWORKER_H

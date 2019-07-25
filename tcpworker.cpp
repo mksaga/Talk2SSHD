@@ -5,6 +5,13 @@
 TCPWorker::TCPWorker(QObject *parent) : QObject(parent)
 {
     (void)parent;
+    socketConnected = false;
+    dataRetrievalClicked = false;
+}
+
+void TCPWorker::setTimerPtr(QTimer *t)
+{
+    dataTimer = t;
 }
 
 // Should I implement the setDest and setPort methods?
@@ -19,9 +26,15 @@ bool TCPWorker::startConnection(QString addr, int p)
     sock->connectToHost(*dest, port);
 
     if (sock->waitForConnected(timeout)) {
+        socketConnected = true;
         return true;
     }
     return false;
+}
+
+bool TCPWorker::getConnectionStatus()
+{
+    return socketConnected;
 }
 
 void TCPWorker::writeToSensor(QByteArray *msg, QByteArray *resp,
@@ -88,6 +101,7 @@ void TCPWorker::startRealTimeDataRetrieval(uint8_t reqType, uint8_t lAN,
 {
     QByteArray resp(128, '*');
     QDateTime dt;
+
     laneApprNum = lAN;
 
     *errBytes = 0;
@@ -102,10 +116,13 @@ void TCPWorker::startRealTimeDataRetrieval(uint8_t reqType, uint8_t lAN,
     message = genReadMsg(Crc8Table, 0x13, 0, sensorId);
     len = message.size();
     writeToSensor(&message, &resp, errBytes, len);
-    if (resp.size() > 10) { numClasses = (resp.at(9) - 3) / 2; }
+    if (resp.size() > 10) {
+        // compute based on payload size
+        numClasses = (resp.at(9) - 3) / 2;
+    }
 
     // speed bins
-    message= genReadMsg(Crc8Table, 0x1D, 0, sensorId);
+    message = genReadMsg(Crc8Table, 0x1D, 0, sensorId);
     len = message.size();
     writeToSensor(&message, &resp, errBytes, len);
     if (resp.size() > 13) {
@@ -135,44 +152,77 @@ void TCPWorker::startRealTimeDataRetrieval(uint8_t reqType, uint8_t lAN,
             printf("File does not exist.\n");
         }
 
-//        QTextStream retrievedDataStream(dataFile);
-
         // set up header row of the data file
         QString headerLine;
         QString spacer = "    ";
         QString t;
 
         (*retrievedDataStream) << qSetFieldWidth(25) << center << "Datetime";
-        t = QString("%1").arg("Datetime", 25);
+        t = QString("%1").arg("Datetime" + spacer);
         headerLine.append(t);
+
         (*retrievedDataStream) << qSetFieldWidth(5) << "Interval Duration" << spacer;
+        t = QString("%1").arg("Interval Duration" + spacer);
+        headerLine.append(t);
+
         (*retrievedDataStream) << "Total # Lanes/Apprs" << spacer;
+        t = QString("%1").arg("Total # Lanes/Apprs" + spacer);
+        headerLine.append(t);
+
         (*retrievedDataStream) << "Avg Speed" << spacer;
+        t = QString("%1").arg("Avg Speed" + spacer);
+        headerLine.append(t);
+
         (*retrievedDataStream) << "Volume" << spacer;
+        t = QString("%1").arg("Volume" + spacer);
+        headerLine.append(t);
+
         (*retrievedDataStream) << "Avg Occupancy" << spacer;
+        t = QString("%1").arg("Avg Occupancy" + spacer);
+        headerLine.append(t);
+
         (*retrievedDataStream) << "85th Pctle Speed" << spacer;
+        t = QString("%1").arg("85th Pctle Speed" + spacer);
+        headerLine.append(t);
+
         (*retrievedDataStream) << "Headway (ms)" << spacer;
+        t = QString("%1").arg("Headway (ms)" + spacer);
+        headerLine.append(t);
+
         (*retrievedDataStream) << "Gap (ms)" << spacer;
+        t = QString("%1").arg("Gap (ms)" + spacer);
+        headerLine.append(t);
 
         int i;
-        for (i=0; i<numClasses; i++) {
+        for (i=0; i<numClasses && i<10; i++) {
             (*retrievedDataStream) << qSetFieldWidth(11) << "Length Bin "
                                    << qSetFieldWidth(2) << i;
+            t = QString("%1").arg("Length Bin " + QString('1' + i));
+            t.append(spacer);
+            headerLine.append(t);
         }
         (*retrievedDataStream) << spacer;
         for (i=0; i<numSpeedBins; i++) {
             (*retrievedDataStream) << "Speed Bin " << i;
+            t = QString("%1").arg("Speed Bin " + QString('1' + i));
+            t.append(spacer);
+            headerLine.append(t);
         }
         (*retrievedDataStream) << "\n";
+        headerLine.append("\n");
 
 
         message = getVarSizeIntervalDataByTimestamp(Crc8Table, reqType, sensorId,
                                                 0, 0, dt, laneApprNum);
 
-        connect(dataTimer, &QTimer::timeout, this, &TCPWorker::getNewSensorData,
+        if (!dataRetrievalClicked) {
+            connect(dataTimer, &QTimer::timeout, this, &TCPWorker::getNewSensorData,
                 Qt::DirectConnection);
+            dataRetrievalClicked = true;
+        }
 
         dataTimer->start(dataInterval * 1000);
+        emit fileReadyForRead(headerLine);
     }
 }
 
@@ -266,7 +316,7 @@ void TCPWorker::getNewSensorData()
                 intervalNotPresent = true;
                 i = loopLimit;
                 newDataLine = "No New Data";
-//                emit fileReadyForRead(newDataLine);
+                emit fileReadyForRead(newDataLine);
                 break;
             } else {
 
@@ -436,7 +486,7 @@ void TCPWorker::getNewSensorData()
 
             (*retrievedDataStream) << "\n\n";
             newDataLine.append("\n\n");
-//            emit fileReadyForRead(newDataLine);
+            emit fileReadyForRead(newDataLine);
         }
     }
 }

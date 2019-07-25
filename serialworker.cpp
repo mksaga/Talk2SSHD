@@ -8,6 +8,7 @@
 
 SerialWorker::SerialWorker(QObject *parent) : QObject(parent)
 {
+//    dataTimer = new QTimer(this);
 }
 
 SerialWorker::~SerialWorker()
@@ -99,6 +100,7 @@ void SerialWorker::startRealTimeDataRetrieval(uint8_t reqType, uint8_t lAN,
 //    QByteArray message= *message;
     QByteArray resp(128, '*');
     QDateTime dt;
+
     laneApprNum = lAN;
 
     *errBytes = 0;
@@ -111,10 +113,13 @@ void SerialWorker::startRealTimeDataRetrieval(uint8_t reqType, uint8_t lAN,
     // length (classification)
     message = genReadMsg(Crc8Table, 0x13, 0, sensorId);
     writeMsgToSensor(&message, &resp, Crc8Table, errBytes);
-    if (resp.size() > 10) { numClasses = (resp.at(9) - 3) / 2; }
+    if (resp.size() > 10) {
+        // compute based on payload size
+        numClasses = (resp.at(9) - 3) / 2;
+    }
 
     // speed bins
-    message= genReadMsg(Crc8Table, 0x1D, 0, sensorId);
+    message = genReadMsg(Crc8Table, 0x1D, 0, sensorId);
     writeMsgToSensor(&message, &resp, Crc8Table, errBytes);
     if (resp.size() > 13) {
         numSpeedBins = (resp.at(9) - 3) / 2;
@@ -143,35 +148,64 @@ void SerialWorker::startRealTimeDataRetrieval(uint8_t reqType, uint8_t lAN,
             printf("File does not exist.\n");
         }
 
-//        QTextStream retrievedDataStream(dataFile);
-
         // set up header row of the data file
         QString headerLine;
         QString spacer = "    ";
         QString t;
 
         (*retrievedDataStream) << qSetFieldWidth(25) << center << "Datetime";
-        t = QString("%1").arg("Datetime", 25);
+        t = QString("%1").arg("Datetime" + spacer);
         headerLine.append(t);
+
         (*retrievedDataStream) << qSetFieldWidth(5) << "Interval Duration" << spacer;
+        t = QString("%1").arg("Interval Duration" + spacer);
+        headerLine.append(t);
+
         (*retrievedDataStream) << "Total # Lanes/Apprs" << spacer;
+        t = QString("%1").arg("Total # Lanes/Apprs" + spacer);
+        headerLine.append(t);
+
         (*retrievedDataStream) << "Avg Speed" << spacer;
+        t = QString("%1").arg("Avg Speed" + spacer);
+        headerLine.append(t);
+
         (*retrievedDataStream) << "Volume" << spacer;
+        t = QString("%1").arg("Volume" + spacer);
+        headerLine.append(t);
+
         (*retrievedDataStream) << "Avg Occupancy" << spacer;
+        t = QString("%1").arg("Avg Occupancy" + spacer);
+        headerLine.append(t);
+
         (*retrievedDataStream) << "85th Pctle Speed" << spacer;
+        t = QString("%1").arg("85th Pctle Speed" + spacer);
+        headerLine.append(t);
+
         (*retrievedDataStream) << "Headway (ms)" << spacer;
+        t = QString("%1").arg("Headway (ms)" + spacer);
+        headerLine.append(t);
+
         (*retrievedDataStream) << "Gap (ms)" << spacer;
+        t = QString("%1").arg("Gap (ms)" + spacer);
+        headerLine.append(t);
 
         int i;
-        for (i=0; i<numClasses; i++) {
+        for (i=0; i<numClasses && i<10; i++) {
             (*retrievedDataStream) << qSetFieldWidth(11) << "Length Bin "
                                    << qSetFieldWidth(2) << i;
+            t = QString("%1").arg("Length Bin " + QString('1' + i));
+            t.append(spacer);
+            headerLine.append(t);
         }
         (*retrievedDataStream) << spacer;
         for (i=0; i<numSpeedBins; i++) {
             (*retrievedDataStream) << "Speed Bin " << i;
+            t = QString("%1").arg("Speed Bin " + QString('1' + i));
+            t.append(spacer);
+            headerLine.append(t);
         }
         (*retrievedDataStream) << "\n";
+        headerLine.append("\n");
 
 
         message = getVarSizeIntervalDataByTimestamp(Crc8Table, reqType, sensorId,
