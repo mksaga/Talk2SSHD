@@ -79,6 +79,7 @@ private:
     void refreshSpeedBins();
     void sendToSensor(QByteArray *msg, char msgType);
     bool validateIntervalDataSetup();
+    void startRealTimeDataRetrieval(int requestType);
 
     QFile *file;
     QSerialPort *port;
@@ -130,6 +131,8 @@ private slots:
     void on_yearSpinBox_valueChanged(int arg1);
     void on_setDateTimeBtn_clicked();
     void on_approachSelect_currentIndexChanged(int index);
+    void on_sensorLocnEntry_editingFinished();
+    void on_sensorDescEntry_editingFinished();
 };
 
 #endif // MAINWINDOW_H

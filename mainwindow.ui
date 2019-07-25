@@ -311,9 +311,9 @@
              </widget>
             </item>
             <item>
-             <widget class="QRadioButton" name="unitsEnglish">
+             <widget class="QRadioButton" name="unitsAmerican">
               <property name="text">
-               <string>English</string>
+               <string>American</string>
               </property>
               <attribute name="buttonGroup">
                <string notr="true">buttonGroup</string>

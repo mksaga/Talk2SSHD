@@ -163,9 +163,10 @@ bool MainWindow::refreshSensorConfig()
         QMessageBox::critical(this, "Talk2SSHD", "Connection to sensor "
                                                  "failed. Please retry.");
         return false;
+    } else {
+        parse_gen_conf_read_response(resp, sensorConf, errString);
+        return true;
     }
-    parse_gen_conf_read_response(resp, sensorConf, errString);
-    return true;
 }
 
 void MainWindow::on_connectToCom_clicked()
@@ -208,10 +209,10 @@ void MainWindow::on_connectToCom_clicked()
             ui->sensorOrientation->setText(q);
             if (sensorConf->units == 0) {
                 ui->unitsMetric->setChecked(false);
-                ui->unitsEnglish->setChecked(true);
+                ui->unitsAmerican->setChecked(true);
             } else {
                 ui->unitsMetric->setChecked(true);
-                ui->unitsEnglish->setChecked(false);
+                ui->unitsAmerican->setChecked(false);
             }
 
             refreshDataConfig();
@@ -273,7 +274,7 @@ void MainWindow::on_writeSensorConfig_clicked()
     }
 
     char u;
-    if (ui->unitsEnglish->isChecked()) {
+    if (ui->unitsAmerican->isChecked()) {
         u = 0;
     } else if (ui->unitsMetric->isChecked()){
         u = 1;
@@ -718,7 +719,8 @@ void MainWindow::refreshApproachInfo()
     ui->numApproachesConfigd->setText(q);
     int i;
     ui->approachSelect->setDisabled(true);
-    ui->approachSelect->clear();
+    // Next line is complimented
+//    ui->approachSelect->clear();
     ui->approachSelect->setDisabled(false);
     for (i=1; i<=numApproaches; i++) {
         q = QString("Approach %1").arg(i);
@@ -881,6 +883,7 @@ void MainWindow::on_writeDataSetup_clicked()
         b.setDefaultButton(QMessageBox::Ok);
         int ret = b.exec();
         if (ret == QMessageBox::Ok) {
+
             serialWorker->startRealTimeDataRetrieval(reqType, y, Crc8Table,
                                                      lastReadDataConf,
                                                      sensorId, dataInterval,
@@ -889,6 +892,21 @@ void MainWindow::on_writeDataSetup_clicked()
         }
     } else {
         printf("Nope!\n");
+    }
+}
+
+void MainWindow::startRealTimeDataRetrieval(int reqType)
+{
+    if (port->isOpen()) {
+        // write via serial
+        serialWorker->startRealTimeDataRetrieval(reqType, y, Crc8Table,
+                                                 lastReadDataConf,
+                                                 sensorId, dataInterval,
+                                                 numLanes, numApproaches,
+                                                 &errCode);
+    } else {
+        // write via IP
+
     }
 }
 
@@ -902,10 +920,10 @@ void MainWindow::on_refreshSensorConfig_clicked()
         ui->sensorOrientation->setText(QChar(q));
         if (sensorConf->units == 0) {
             ui->unitsMetric->setChecked(false);
-            ui->unitsEnglish->setChecked(true);
+            ui->unitsAmerican->setChecked(true);
         } else {
             ui->unitsMetric->setChecked(true);
-            ui->unitsEnglish->setChecked(false);
+            ui->unitsAmerican->setChecked(false);
         }
     }
 }
@@ -1166,5 +1184,31 @@ void MainWindow::on_approachSelect_currentIndexChanged(int index)
             case 6: ui->lane6->setChecked(true); break;
             case 7: ui->lane7->setChecked(true); break;
         }
+    }
+}
+
+void MainWindow::on_sensorLocnEntry_editingFinished()
+{
+    int length = ui->sensorLocnEntry->text().length();
+    ui->locnStringLength->setNum(length);
+    if (length > 30) {
+        // red
+        ui->locnStringLength->setStyleSheet("QLabel { color : red; }");
+    } else {
+        // normal
+        ui->locnStringLength->setStyleSheet("QLabel { color : black; }");
+    }
+}
+
+void MainWindow::on_sensorDescEntry_editingFinished()
+{
+    int length = ui->sensorDescEntry->text().length();
+    ui->descStringLength->setNum(length);
+    if (length > 30) {
+        // red
+        ui->descStringLength->setStyleSheet("QLabel { color : red; }");
+    } else {
+        // normal
+        ui->descStringLength->setStyleSheet("QLabel { color : black; }");
     }
 }

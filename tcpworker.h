@@ -6,15 +6,18 @@
 #include <QObject>
 #include <QTcpSocket>
 
+#include "sensor_utils.h"
+
 class TCPWorker : public QObject
 {
     Q_OBJECT
 public:
     explicit TCPWorker(QObject *parent = nullptr);
+    void closeConnection();
     void setDest(QString addr);
     void setPort(int port);
     bool startConnection(QString addr, int port);
-    void closeConnection();
+    void startRealTimeDataRetrieval();
     void writeToSensor(QByteArray *msg, QByteArray *resp,
                        uint16_t *errBytes, qint64 len);
 

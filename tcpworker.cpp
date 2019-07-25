@@ -73,6 +73,16 @@ void TCPWorker::writeToSensor(QByteArray *msg, QByteArray *resp,
     }
 }
 
+void TCPWorker::startRealTimeDataRetrieval(uint8_t reqType, uint8_t lAN,
+                                           uint8_t *Crc8Table,
+                                           sensor_data_config *sDC,
+                                           uint16_t sensorId,
+                                           uint16_t dataInterval, uint8_t nL, uint8_t nA,
+                                           uint16_t *errBytes)
+{
+
+}
+
 void TCPWorker::closeConnection()
 {
     sock->close();

@@ -214,7 +214,7 @@ void parse_gen_conf_read_response(QByteArray response,
     }
 
     if (response.size() < 98) {
-        s->location = "Response too short, incomplete";
+//        s->location = "Response too short, incomplete";
         return;
     }
 
