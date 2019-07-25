@@ -23,7 +23,10 @@ MainWindow::MainWindow(QWidget *parent) :
     // set up serial port (decl. in header file)
     port = new QSerialPort();
 
-    file = new QFile("RTDATA.txt");
+    qDebug() << QDateTime::currentDateTime().toString("MM-dd-yyyy hh.mm.ss");
+
+    const QString s = "RTDATA_" + QDateTime::currentDateTime().toString("MM-dd-yyyy hh.mm.ss") + ".txt";
+    file = new QFile(s);
     file->open(QIODevice::WriteOnly);
 
     serialWorker = new SerialWorker;
