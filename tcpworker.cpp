@@ -218,11 +218,10 @@ void TCPWorker::startRealTimeDataRetrieval(uint8_t reqType, uint8_t lAN,
         if (!dataRetrievalClicked) {
             connect(dataTimer, &QTimer::timeout, this, &TCPWorker::getNewSensorData,
                 Qt::DirectConnection);
+            emit fileReadyForRead(headerLine);
             dataRetrievalClicked = true;
         }
-
         dataTimer->start(dataInterval * 1000);
-        emit fileReadyForRead(headerLine);
     }
 }
 

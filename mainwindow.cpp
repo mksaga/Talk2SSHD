@@ -95,6 +95,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->ipAddrLabel->hide();
     ui->ipPortLabel->hide();
     ui->ipConnect->hide();
+
+    ui->sensorIdEntry->setText("0x0168");
 }
 
 MainWindow::~MainWindow()
@@ -228,6 +230,18 @@ void MainWindow::on_connectToCom_clicked()
         }
 
         sensorConnected = true;
+
+        if (ui->sensorIdEntry->text().isEmpty()) {
+            sensorId = 0x0168;
+        } else {
+            bool conversionOk = false;
+            sensorId = ui->sensorIdEntry->text().toInt(&conversionOk);
+            if (!conversionOk) {
+                sensorId = ui->sensorIdEntry->text().toInt(&conversionOk, 16);
+            }
+        }
+        QString q = QString("Sensor ID: %1").arg(sensorId);
+        QMessageBox::information(this, "Talk2SSHD", q);
 
         // now that COM port connected, check if sensor is connected
         if (refreshSensorConfig()) {
@@ -925,13 +939,13 @@ void MainWindow::on_writeDataSetup_clicked()
             if (individualLaneApprNum==0xFF) {
                 tmp = QString("Get All Lanes");
             } else {
-                tmp = QString("Get Single Lane (%1)").arg(individualLaneApprNum+1);
+                tmp = QString("Get Single Lane (%1)").arg(individualLaneApprNum);
             }
         } else if (reqType == 2) {
             if (individualLaneApprNum==0xFF) {
                 tmp = QString("Get All Approaches");
             } else {
-                tmp = QString("Get Single Approach (%1)").arg(individualLaneApprNum+1);
+                tmp = QString("Get Single Approach (%1)").arg(individualLaneApprNum);
             }
         }
 
@@ -1040,18 +1054,23 @@ void MainWindow::on_connectViaCom_clicked()
 
 void MainWindow::on_connectViaIp_clicked()
 {
-    // hide all COM related fields/labels
-    ui->comPortSelect->hide();
-    ui->refreshComPorts->hide();
-    ui->connectToCom->hide();
-    ui->comPortsAvailableLabel->hide();
+    if (sensorConnected) {
+        QMessageBox::warning(this, "Talk2SSHD", "Please disconnect sensor serial cable first.");
+        return;
+    } else {
+        // hide all COM related fields/labels
+        ui->comPortSelect->hide();
+        ui->refreshComPorts->hide();
+        ui->connectToCom->hide();
+        ui->comPortsAvailableLabel->hide();
 
-    // show all IP related fields/labels
-    ui->ipAddrEntry->show();
-    ui->ipAddrLabel->show();
-    ui->ipPortEntry->show();
-    ui->ipPortLabel->show();
-    ui->ipConnect->show();
+        // show all IP related fields/labels
+        ui->ipAddrEntry->show();
+        ui->ipAddrLabel->show();
+        ui->ipPortEntry->show();
+        ui->ipPortLabel->show();
+        ui->ipConnect->show();
+    }
 }
 
 void MainWindow::on_ipConnect_clicked()
